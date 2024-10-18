@@ -8,12 +8,11 @@ type RawString struct {
 const ellipses = "..."
 const maxLength = 10
 
-// TODO: Should this be reference?
-func (r *RawString) Display() string {
+func (r RawString) Display() string {
 	return r.value
 }
 
-func (r *RawString) ShortDisplay() string {
+func (r RawString) ShortDisplay() string {
 	if len(r.value) > maxLength {
 		return r.value[0:maxLength-len(ellipses)] + ellipses
 	}
@@ -21,11 +20,11 @@ func (r *RawString) ShortDisplay() string {
 	return r.value
 }
 
-func (*RawString) Type() ComparableType {
+func (RawString) Type() ComparableType {
 	return ComparableTypes.RawString
 }
 
-func compareStrings(a, b *RawString) ComparisonResult {
+func compareStrings(a, b RawString) ComparisonResult {
 	if a.value == b.value {
 		return ComparisonResults.Correct
 	} else {

@@ -8,4 +8,4 @@ func main() {
 	cli.App()
 }
 
-// TODO: Add unit tests...
+// TODO: This project needs a massive code review.

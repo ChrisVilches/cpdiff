@@ -78,10 +78,9 @@ func App() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
+		// TODO: Not really a problem (maybe remove TODO) but this prints an error
+		// when the user passes a flag tha doesn't exist.
+		// The examples in the website also have this print (except the last example).
 		log.Fatal(err)
 	}
 }
-
-// TODO: Add flag to show all lines including empty ones (this is hard because I need to format properly and know which ones to compare to which ones)
-//       Also I need to find a good case example from my Algorithms repository (which I don't have right now.)
-//       Or just create some dummy files for testing.

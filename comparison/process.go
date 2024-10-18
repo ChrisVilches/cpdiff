@@ -5,56 +5,27 @@ import (
 	"math/big"
 )
 
-type ProcessResult struct {
-	Correct           int
-	Approx            int
-	TotalLines        int
-	HasRealNumbers    bool
-	BiggestDifference big.Float
-}
-
-type LineCmpResult int
-
-var LineCmpResults = struct {
-	Correct   LineCmpResult
-	Incorrect LineCmpResult
-	Approx    LineCmpResult
-}{
-	Correct:   0,
-	Incorrect: 1,
-	Approx:    2,
-}
-
 type ComparisonEntry struct {
-	Lhs     Comparable
-	Rhs     Comparable
-	Verdict LineCmpResult
+	Lhs            Comparable
+	Rhs            Comparable
+	CmpRes         ComparisonResult
+	HasRealNumbers bool
+	MaxErr         *big.Float
 }
 
-func handleNumArrays(lhs, rhs *NumArray, relativeErr bool, biggestDifference, error *big.Float, hasRealNumbers *bool) ComparisonResult {
-	var diff big.Float
-	var cmp ComparisonResult
-	cmp, diff = compareNums(lhs, rhs, error, relativeErr)
+func handleNumArrays(lhs, rhs NumArray, relativeErr bool, error *big.Float) (ComparisonResult, *big.Float, bool) {
+	cmp, diff := compareNums(lhs, rhs, error, relativeErr)
 
-	if biggestDifference.Cmp(&diff) == -1 {
-		biggestDifference.Set(&diff)
-	}
-
-	*hasRealNumbers = *hasRealNumbers || lhs.HasRealNumbers() || lhs.HasRealNumbers()
-	return cmp
+	return cmp, diff, lhs.HasRealNumbers() || lhs.HasRealNumbers()
 }
 
 func Process(
 	lhsCh,
 	rhsCh chan string,
-	error big.Float,
+	error *big.Float,
 	relativeErr bool,
-	comparisonResults chan ComparisonEntry,
-	ret chan ProcessResult,
+	entriesCh chan ComparisonEntry,
 ) {
-
-	result := ProcessResult{}
-
 	for {
 		l, ok1 := <-lhsCh
 		r, ok2 := <-rhsCh
@@ -67,41 +38,38 @@ func Process(
 		rhs := LineToComparable(r)
 
 		var cmp ComparisonResult
+		maxErr := big.NewFloat(0)
+		hasRealNumbers := false
 
 		if lhs.Type() != rhs.Type() {
 			cmp = ComparisonResults.Incorrect
 		} else if lhs.Type() == ComparableTypes.NumArray {
-			cmp = handleNumArrays(
-				lhs.(*NumArray),
-				rhs.(*NumArray),
+			cmp, maxErr, hasRealNumbers = handleNumArrays(
+				lhs.(NumArray),
+				rhs.(NumArray),
 				relativeErr,
-				&result.BiggestDifference,
-				&error,
-				&result.HasRealNumbers,
+				error,
 			)
 		} else if lhs.Type() == ComparableTypes.RawString {
-			cmp = compareStrings(lhs.(*RawString), rhs.(*RawString))
+			cmp = compareStrings(lhs.(RawString), rhs.(RawString))
 		} else {
 			log.Fatalf("Wrong type")
 		}
 
-		entry := ComparisonEntry{Lhs: lhs, Rhs: rhs}
-
-		if cmp == ComparisonResults.Correct {
-			result.Correct++
-			entry.Verdict = LineCmpResults.Correct
-		} else if cmp == ComparisonResults.Approx {
-			result.Correct++
-			result.Approx++
-			entry.Verdict = LineCmpResults.Approx
-		} else {
-			entry.Verdict = LineCmpResults.Incorrect
+		entry := ComparisonEntry{
+			Lhs:            lhs,
+			Rhs:            rhs,
+			MaxErr:         maxErr,
+			HasRealNumbers: hasRealNumbers,
+			CmpRes:         cmp,
 		}
 
-		comparisonResults <- entry
+		// TODO: This can be simplified, I think.
+		// And when I do, more things can be simplified, probably. (maybe just use one enum)
+		// (usage of enum)
 
-		result.TotalLines++
+		entriesCh <- entry
 	}
 
-	ret <- result
+	close(entriesCh)
 }
