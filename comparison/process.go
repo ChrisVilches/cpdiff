@@ -13,23 +13,27 @@ type ProcessResult struct {
 	BiggestDifference big.Float
 }
 
-type SingleComparisonResult int
+type LineCmpResult int
 
-const (
-	SingleComparisonCorrect SingleComparisonResult = iota
-	SingleComparisonApproxCorrect
-	SingleComparisonIncorrect
-)
+var LineCmpResults = struct {
+	Correct   LineCmpResult
+	Incorrect LineCmpResult
+	Approx    LineCmpResult
+}{
+	Correct:   0,
+	Incorrect: 1,
+	Approx:    2,
+}
 
 type ComparisonEntry struct {
 	Lhs     Comparable
 	Rhs     Comparable
-	Verdict SingleComparisonResult
+	Verdict LineCmpResult
 }
 
-func handleNumArrays(lhs, rhs *NumArray, relativeErr bool, biggestDifference, error *big.Float, hasRealNumbers *bool) int {
+func handleNumArrays(lhs, rhs *NumArray, relativeErr bool, biggestDifference, error *big.Float, hasRealNumbers *bool) ComparisonResult {
 	var diff big.Float
-	var cmp int
+	var cmp ComparisonResult
 	cmp, diff = compareNums(lhs, rhs, error, relativeErr)
 
 	if biggestDifference.Cmp(&diff) == -1 {
@@ -41,8 +45,8 @@ func handleNumArrays(lhs, rhs *NumArray, relativeErr bool, biggestDifference, er
 }
 
 func Process(
-	lhsStream,
-	rhsStream chan string,
+	lhsCh,
+	rhsCh chan string,
 	error big.Float,
 	relativeErr bool,
 	comparisonResults chan ComparisonEntry,
@@ -52,8 +56,8 @@ func Process(
 	result := ProcessResult{}
 
 	for {
-		l, ok1 := <-lhsStream
-		r, ok2 := <-rhsStream
+		l, ok1 := <-lhsCh
+		r, ok2 := <-rhsCh
 
 		if !ok1 && !ok2 {
 			break
@@ -62,11 +66,11 @@ func Process(
 		lhs := LineToComparable(l)
 		rhs := LineToComparable(r)
 
-		var cmp int
+		var cmp ComparisonResult
 
 		if lhs.Type() != rhs.Type() {
-			cmp = Incorrect
-		} else if lhs.Type() == "num_array" {
+			cmp = ComparisonResults.Incorrect
+		} else if lhs.Type() == ComparableTypes.NumArray {
 			cmp = handleNumArrays(
 				lhs.(*NumArray),
 				rhs.(*NumArray),
@@ -75,7 +79,7 @@ func Process(
 				&error,
 				&result.HasRealNumbers,
 			)
-		} else if lhs.Type() == "string" {
+		} else if lhs.Type() == ComparableTypes.RawString {
 			cmp = compareStrings(lhs.(*RawString), rhs.(*RawString))
 		} else {
 			log.Fatalf("Wrong type")
@@ -83,16 +87,15 @@ func Process(
 
 		entry := ComparisonEntry{Lhs: lhs, Rhs: rhs}
 
-		// TODO: Should allow to remove colors (a CLI flag)
-		if cmp == Correct {
+		if cmp == ComparisonResults.Correct {
 			result.Correct++
-			entry.Verdict = SingleComparisonCorrect
-		} else if cmp == Approx {
+			entry.Verdict = LineCmpResults.Correct
+		} else if cmp == ComparisonResults.Approx {
 			result.Correct++
 			result.Approx++
-			entry.Verdict = SingleComparisonApproxCorrect
+			entry.Verdict = LineCmpResults.Approx
 		} else {
-			entry.Verdict = SingleComparisonIncorrect
+			entry.Verdict = LineCmpResults.Incorrect
 		}
 
 		comparisonResults <- entry

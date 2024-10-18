@@ -7,11 +7,11 @@ import (
 
 type NumArray struct {
 	nums    []big.Float
-	rawData *string
+	rawData string
 }
 
-func (*NumArray) Type() string {
-	return "num_array"
+func (*NumArray) Type() ComparableType {
+	return ComparableTypes.NumArray
 }
 
 func (n *NumArray) HasRealNumbers() bool {
@@ -26,24 +26,24 @@ func (n *NumArray) HasRealNumbers() bool {
 
 // TODO: Should this be reference?
 func (n *NumArray) Display() string {
-	return *n.rawData
+	return n.rawData
 }
 
 func (n *NumArray) ShortDisplay() string {
 	if len(n.nums) == 1 {
-		return *n.rawData
+		return n.rawData
 	}
 
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
 }
 
-func compareNums(first, second *NumArray, error *big.Float, relativeErr bool) (int, big.Float) {
+func compareNums(first, second *NumArray, error *big.Float, relativeErr bool) (ComparisonResult, big.Float) {
 	// biggestDifference := new(big.Float)
 	// TODO: I think this prevents doing heap operations? Just return the bare object?
 	var biggestDifference big.Float
 
 	if len(first.nums) != len(second.nums) {
-		return Incorrect, biggestDifference
+		return ComparisonResults.Incorrect, biggestDifference
 	}
 
 	approx := false
@@ -80,12 +80,12 @@ func compareNums(first, second *NumArray, error *big.Float, relativeErr bool) (i
 	}
 
 	if !ok {
-		return Incorrect, biggestDifference
+		return ComparisonResults.Incorrect, biggestDifference
 	}
 
 	if approx {
-		return Approx, biggestDifference
+		return ComparisonResults.Approx, biggestDifference
 	} else {
-		return Correct, biggestDifference
+		return ComparisonResults.Correct, biggestDifference
 	}
 }

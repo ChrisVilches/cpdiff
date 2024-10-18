@@ -11,6 +11,6 @@ func (*Empty) ShortDisplay() string {
 	return "-"
 }
 
-func (*Empty) Type() string {
-	return "empty"
+func (*Empty) Type() ComparableType {
+	return ComparableTypes.Empty
 }

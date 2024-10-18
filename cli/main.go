@@ -1,8 +1,5 @@
 package cli
 
-// TODO: I think I need to tell the user whether I'm using absolute or relative error.
-// i dont even know what's the diff between the two.
-
 import (
 	"github.com/urfave/cli/v2"
 	"log"
@@ -11,9 +8,22 @@ import (
 
 func App() {
 	app := &cli.App{
-		Name:  "cpdiff",
-		Usage: "Compare two files (or use stdin as input)",
+		Name:                   "cpdiff",
+		Usage:                  "Compare two files (or use stdin as input)",
+		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "wrong",
+				Aliases: []string{"w"},
+				Value:   false,
+				Usage:   "Ignore correct lines and show only wrong ones",
+			},
+			&cli.BoolFlag{
+				Name:    "abort",
+				Aliases: []string{"a"},
+				Value:   false,
+				Usage:   "Abort when it finds the first incorrect answer",
+			},
 			&cli.BoolFlag{
 				Name:    "linenum",
 				Aliases: []string{"l"},
@@ -59,6 +69,8 @@ func App() {
 				ctx.Bool("duration"),
 				ctx.Bool("linenum"),
 				ctx.Bool("relative"),
+				ctx.Bool("abort"),
+				ctx.Bool("wrong"),
 				ctx.String("error"),
 				args,
 			)
@@ -70,6 +82,6 @@ func App() {
 	}
 }
 
-// TODO: Add flag to skip correct lines.
-// TODO: Flag to stop when both channels have different length
 // TODO: Add flag to show all lines including empty ones (this is hard because I need to format properly and know which ones to compare to which ones)
+//       Also I need to find a good case example from my Algorithms repository (which I don't have right now.)
+//       Or just create some dummy files for testing.

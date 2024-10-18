@@ -1,6 +1,8 @@
 package main
 
-import "cpdiff/cli"
+import (
+	"cpdiff/cli"
+)
 
 func main() {
 	cli.App()

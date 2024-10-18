@@ -2,7 +2,7 @@ package comparison
 
 type RawString struct {
 	value   string
-	rawData *string
+	rawData string
 }
 
 const ellipses = "..."
@@ -21,19 +21,14 @@ func (r *RawString) ShortDisplay() string {
 	return r.value
 }
 
-// TODO: BEST IDEA. Add another method to do a "ShortDisplay" which everyone has to implement.
-// then I call that from the parent. That way I remove dependencies to parameters that can vary
-// and makes the polymorphism fucked up.
-
-// TODO: Maybe using string for the type would be computationally expensive.
-func (*RawString) Type() string {
-	return "string"
+func (*RawString) Type() ComparableType {
+	return ComparableTypes.RawString
 }
 
-func compareStrings(a, b *RawString) int {
+func compareStrings(a, b *RawString) ComparisonResult {
 	if a.value == b.value {
-		return Correct
+		return ComparisonResults.Correct
 	} else {
-		return Incorrect
+		return ComparisonResults.Incorrect
 	}
 }

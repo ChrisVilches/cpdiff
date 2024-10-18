@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/fatih/color"
@@ -40,7 +41,11 @@ func getConfigError(errorString string) (res *big.Float) {
 	return
 }
 
-func showComparisonLine(entry comparison.ComparisonEntry, showLineNum, useColor, short bool, line int) {
+func showComparisonLine(entry comparison.ComparisonEntry, showLineNum, useColor, short, wrongOnly bool, line int) {
+	if wrongOnly && entry.Verdict != comparison.LineCmpResults.Incorrect {
+		return
+	}
+
 	pre := ""
 
 	if showLineNum {
@@ -61,9 +66,9 @@ func showComparisonLine(entry comparison.ComparisonEntry, showLineNum, useColor,
 	icon := ""
 
 	switch entry.Verdict {
-	case comparison.SingleComparisonCorrect:
+	case comparison.LineCmpResults.Correct:
 		c = color.FgGreen
-	case comparison.SingleComparisonApproxCorrect:
+	case comparison.LineCmpResults.Approx:
 		c = color.FgYellow
 		icon = "≈ "
 	default:
@@ -74,7 +79,7 @@ func showComparisonLine(entry comparison.ComparisonEntry, showLineNum, useColor,
 	printfColor(c, useColor, "%s%s%s%s%s\n", pre, lhsText, separator, icon, rhsText)
 }
 
-func showVerdict(result comparison.ProcessResult, useColor, showDuration bool, startTime, endTime time.Time, error *big.Float) {
+func showVerdict(result comparison.ProcessResult, useColor, showDuration, aborted bool, startTime, endTime time.Time, error *big.Float) {
 	var duration string
 
 	if showDuration {
@@ -87,29 +92,38 @@ func showVerdict(result comparison.ProcessResult, useColor, showDuration bool, s
 		printfColor(color.FgRed, useColor, "Wrong Answer %d/%d%s\n", result.Correct, result.TotalLines, duration)
 	}
 
+	if aborted {
+		printfColor(color.FgRed, useColor, "Aborted\n")
+	}
+
 	if result.HasRealNumbers {
+		// TODO: Say here whether it's absolute or relative error.
 		printfColor(color.FgYellow, useColor, "Biggest difference found was %s (allowing %s)\n", result.BiggestDifference.String(), error.String())
 	}
 }
 
-func readLinesToChannel(buf *bufio.Scanner, ch chan string) {
+func readLinesToChannel(buf *bufio.Scanner, ch chan string, aborted *atomic.Bool) {
 	for buf.Scan() {
+		if aborted.Load() {
+			break
+		}
+
 		line := buf.Text()
+
 		if shouldSkipLine(line) {
 			continue
 		}
+
 		ch <- line
 	}
 
 	close(ch)
 }
 
-func mainCommand(short, useColor, showDuration, showLineNum, useRelative bool, errorString string, args []string) error {
+func mainCommand(short, useColor, showDuration, showLineNum, useRelative, abortEarly, wrongOnly bool, errorString string, args []string) error {
 	startTime := time.Now()
 	error := getConfigError(errorString)
 
-	var input *bufio.Scanner
-	var target *bufio.Scanner
 	files := make([]*os.File, 2)
 
 	if len(args) == 2 {
@@ -122,8 +136,8 @@ func mainCommand(short, useColor, showDuration, showLineNum, useRelative bool, e
 		log.Fatal("Should have 1 or 2 arguments")
 	}
 
-	input = bufio.NewScanner(files[0])
-	target = bufio.NewScanner(files[1])
+	input := bufio.NewScanner(files[0])
+	target := bufio.NewScanner(files[1])
 
 	for _, f := range files {
 		defer f.Close()
@@ -135,8 +149,10 @@ func mainCommand(short, useColor, showDuration, showLineNum, useRelative bool, e
 	lhsCh := make(chan string)
 	rhsCh := make(chan string)
 
-	go readLinesToChannel(input, lhsCh)
-	go readLinesToChannel(target, rhsCh)
+	var aborted atomic.Bool
+
+	go readLinesToChannel(input, lhsCh, &aborted)
+	go readLinesToChannel(target, rhsCh, &aborted)
 	go comparison.Process(lhsCh, rhsCh, *error, useRelative, lines, stats)
 
 	currLine := 1
@@ -145,11 +161,20 @@ Select:
 	for {
 		select {
 		case elem := <-lines:
-			showComparisonLine(elem, showLineNum, useColor, short, currLine)
+			if aborted.Load() {
+				continue
+			}
+
+			showComparisonLine(elem, showLineNum, useColor, short, wrongOnly, currLine)
+
+			if abortEarly && elem.Verdict == comparison.LineCmpResults.Incorrect {
+				aborted.Store(true)
+			}
+
 			currLine++
 
 		case result := <-stats:
-			showVerdict(result, useColor, showDuration, startTime, time.Now(), error)
+			showVerdict(result, useColor, showDuration, aborted.Load(), startTime, time.Now(), error)
 			break Select
 		}
 	}

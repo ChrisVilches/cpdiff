@@ -1,10 +1,19 @@
 package comparison
 
-// TODO: change name?? it's not a comparable interface anymore
-// this is because the different comparing functions return different data... numbers return biggest difference,
-// while strings don't.
 type Comparable interface {
-	Type() string
+	Type() ComparableType
 	Display() string
 	ShortDisplay() string
+}
+
+type ComparableType int
+
+var ComparableTypes = struct {
+	RawString ComparableType
+	NumArray  ComparableType
+	Empty     ComparableType
+}{
+	RawString: 0,
+	NumArray:  1,
+	Empty:     2,
 }

@@ -12,14 +12,13 @@ func toNumArray(s string) ([]big.Float, bool) {
 	res := []big.Float{}
 
 	for _, part := range parts {
-		num := new(big.Float)
+		var num big.Float
 
 		if _, ok := num.SetString(part); !ok {
 			return nil, false
 		}
 
-		// TODO: Not sure about this *num usage.
-		res = append(res, *num)
+		res = append(res, num)
 	}
 
 	return res, true
@@ -35,8 +34,8 @@ func LineToComparable(line string) Comparable {
 	nums, ok := toNumArray(line)
 
 	if ok {
-		return &NumArray{nums: nums, rawData: &line}
+		return &NumArray{nums: nums, rawData: line}
 	} else {
-		return &RawString{value: line, rawData: &line}
+		return &RawString{value: line, rawData: line}
 	}
 }
