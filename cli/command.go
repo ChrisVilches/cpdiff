@@ -19,26 +19,6 @@ func shouldSkipLine(line string) bool {
 	return util.IsEmptyLine(line)
 }
 
-func getConfigError(errorString string) (res *big.Float) {
-	res = new(big.Float)
-
-	res.SetString(defaultError)
-
-	if util.IsEmptyLine(errorString) {
-		return
-	}
-
-	parsedVal := new(big.Float)
-
-	if _, ok := parsedVal.SetString(errorString); !ok || util.BigFloatOutsideRange(parsedVal, 0, 1) {
-		warn(fmt.Sprintf("Allowed error value is incorrect. Using default value %s\n", defaultError))
-		return
-	}
-
-	res.Set(parsedVal)
-	return
-}
-
 func iconColor(entry comparison.ComparisonEntry) (color.Attribute, string) {
 	switch entry.CmpRes {
 	case comparison.ComparisonResults.Correct:
@@ -50,21 +30,21 @@ func iconColor(entry comparison.ComparisonEntry) (color.Attribute, string) {
 	}
 }
 
-func showComparisonLine(entry comparison.ComparisonEntry, showLineNum, useColor, short, wrongOnly bool, line int) {
-	if wrongOnly && entry.CmpRes != comparison.ComparisonResults.Incorrect {
-		return
+func showComparisonLine(entry comparison.ComparisonEntry, opts options, line int) bool {
+	if opts.showOnlyWrong && entry.CmpRes != comparison.ComparisonResults.Incorrect {
+		return false
 	}
 
 	pre := ""
 
-	if showLineNum {
+	if opts.showLineNum {
 		pre = `#{}`
 		pre = fmt.Sprintf("%d\t", line)
 	}
 
 	var lhsText, rhsText string
 
-	if short {
+	if opts.short {
 		lhsText = entry.Lhs.ShortDisplay()
 		rhsText = entry.Rhs.ShortDisplay()
 	} else {
@@ -74,34 +54,42 @@ func showComparisonLine(entry comparison.ComparisonEntry, showLineNum, useColor,
 
 	colorAttribute, iconStr := iconColor(entry)
 
-	printfColor(colorAttribute, useColor, "%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
+	printfColor(colorAttribute, opts.showColor, "%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
+	return true
 }
 
-func showVerdict(verdict Verdict, useColor, showDuration, aborted, useRelative bool, startTime, endTime time.Time, error *big.Float) {
+func showFullResult(fullResult FullResult, aborted bool, startTime, endTime time.Time, opts options) {
 	var duration string
 
-	if showDuration {
+	if opts.showDuration {
 		duration = fmt.Sprintf(" (%s)", endTime.Sub(startTime))
 	}
 
-	if verdict.totalLines == verdict.correct {
-		printfColor(color.FgGreen, useColor, "Accepted %d/%d%s\n", verdict.correct, verdict.totalLines, duration)
+	if fullResult.totalLines == fullResult.correct {
+		printfColor(color.FgGreen, opts.showColor, "Accepted %d/%d%s\n", fullResult.correct, fullResult.totalLines, duration)
 	} else {
-		printfColor(color.FgRed, useColor, "Wrong Answer %d/%d%s\n", verdict.correct, verdict.totalLines, duration)
+		printfColor(color.FgRed, opts.showColor, "Wrong Answer %d/%d%s\n", fullResult.correct, fullResult.totalLines, duration)
 	}
 
 	if aborted {
-		printfColor(color.FgRed, useColor, "Aborted\n")
+		printfColor(color.FgRed, opts.showColor, "Aborted\n")
 	}
 
-	if verdict.hasRealNumbers {
+	if fullResult.hasRealNumbers {
 		errType := "absolute"
 
-		if useRelative {
+		if opts.useRelativeError {
 			errType = "relative"
 		}
 
-		printfColor(color.FgYellow, useColor, "Max error found was %s (using %s error of %s)\n", verdict.maxErr.String(), errType, error.String())
+		printfColor(
+			color.FgYellow,
+			opts.showColor,
+			"Max error found was %s (using %s error of %s)\n",
+			fullResult.maxErr.String(),
+			errType,
+			opts.error.String(),
+		)
 	}
 }
 
@@ -119,7 +107,10 @@ func readLinesToChannel(buf *bufio.Scanner, ch chan string) {
 	close(ch)
 }
 
-type Verdict struct {
+// TODO: CHange the name of this struct and related methods/parameters because it should be more like
+//
+//	"full result" or something like that.
+type FullResult struct {
 	totalLines     int
 	correct        int
 	approx         int
@@ -127,7 +118,7 @@ type Verdict struct {
 	maxErr         *big.Float
 }
 
-func (v Verdict) putEntry(entry comparison.ComparisonEntry) Verdict {
+func (v FullResult) putEntry(entry comparison.ComparisonEntry) FullResult {
 	correct := v.correct
 	approx := v.approx
 
@@ -139,7 +130,7 @@ func (v Verdict) putEntry(entry comparison.ComparisonEntry) Verdict {
 		correct++
 	}
 
-	return Verdict{
+	return FullResult{
 		totalLines:     v.totalLines + 1,
 		correct:        correct,
 		approx:         approx,
@@ -148,8 +139,8 @@ func (v Verdict) putEntry(entry comparison.ComparisonEntry) Verdict {
 	}
 }
 
-func NewVerdict() Verdict {
-	return Verdict{
+func NewFullResult() FullResult {
+	return FullResult{
 		totalLines:     0,
 		correct:        0,
 		approx:         0,
@@ -158,9 +149,8 @@ func NewVerdict() Verdict {
 	}
 }
 
-func mainCommand(short, useColor, showDuration, showLineNum, useRelative, abortEarly, wrongOnly bool, errorString string, args []string) error {
+func mainCommand(opts options, args []string) error {
 	startTime := time.Now()
-	error := getConfigError(errorString)
 
 	files := make([]*os.File, 2)
 
@@ -181,34 +171,32 @@ func mainCommand(short, useColor, showDuration, showLineNum, useRelative, abortE
 		defer f.Close()
 	}
 
-	// TODO: should these channels have size???? This is very important to get right.
-	entries := make(chan comparison.ComparisonEntry)
-	lhsCh := make(chan string)
-	rhsCh := make(chan string)
+	// TODO: Lol? it was possible to define constants inside functions.
+	// I need to change many things I think.
+	const chSize = 100
 
-	// TODO: This ain't necessary for now, so remove it when I'm sure it's not necessary.
-	// but i still need the boolean value to print the "aborted" message
+	// TODO: should these channels have size???? This is very important to get right.
+	entries := make(chan comparison.ComparisonEntry, chSize)
+	lhsCh := make(chan string, chSize)
+	rhsCh := make(chan string, chSize)
+
 	aborted := false
 
 	go readLinesToChannel(input, lhsCh)
 	go readLinesToChannel(target, rhsCh)
-	go comparison.Process(lhsCh, rhsCh, error, useRelative, entries)
+	go comparison.Process(lhsCh, rhsCh, opts.error, opts.useRelativeError, entries)
 
-	verdict := NewVerdict()
+	fullResult := NewFullResult()
+	printedLines := false
 
 	for entry := range entries {
-		verdict = verdict.putEntry(entry)
+		fullResult = fullResult.putEntry(entry)
 
-		showComparisonLine(entry, showLineNum, useColor, short, wrongOnly, verdict.totalLines)
+		if showComparisonLine(entry, opts, fullResult.totalLines) {
+			printedLines = true
+		}
 
-		//        ↓↓↓↓this one is fixed I think. Verify once moar↓↓↓
-		// TODO: Bug... run this command `cpdiff -a datalandscape`
-		// and press CTRL+D after a second.
-		// It will print 0/3. This number is wrong.
-		// (refactor done) One solution is to collect the stats (final result) here instead of
-		// inside the Process.
-		if abortEarly && entry.CmpRes == comparison.ComparisonResults.Incorrect {
-			// aborted.Store(true)
+		if opts.abortEarly && entry.CmpRes == comparison.ComparisonResults.Incorrect {
 			aborted = true
 			break
 		}
@@ -222,12 +210,11 @@ func mainCommand(short, useColor, showDuration, showLineNum, useRelative, abortE
 		return err
 	}
 
-	// TODO: Untested. It shouldn't print a new line if there were no test cases.
-	if verdict.totalLines > 0 {
+	if printedLines {
 		fmt.Println()
 	}
 
-	showVerdict(verdict, useColor, showDuration, aborted, useRelative, startTime, time.Now(), error)
+	showFullResult(fullResult, aborted, startTime, time.Now(), opts)
 
 	return nil
 }

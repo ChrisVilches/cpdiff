@@ -15,3 +15,21 @@ func BigMax(a, b *big.Float) *big.Float {
 		return b
 	}
 }
+
+func AbsError(a, b *big.Float) *big.Float {
+	// TODO: Unit test error calculations. They seem a bit unstable (although it works).
+	// TODO: Can I do this in one liner??
+	res := new(big.Float).Sub(a, b)
+	res.Abs(res)
+	return res
+}
+
+func RelError(a, b *big.Float) *big.Float {
+	// TODO: Unit test error calculations. They seem a bit unstable (although it works).
+	res := new(big.Float).Sub(a, b)
+	// TODO: After doing this change, I'm not sure if I should compare it (using bigMax)
+	// the same way as with the absolute error.
+	// Research what's the methodology for comparing this.
+	res.Quo(res, b)
+	return res
+}

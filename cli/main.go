@@ -9,7 +9,7 @@ import (
 func App() {
 	app := &cli.App{
 		Name:                   "cpdiff",
-		Usage:                  "Compare two files (or use stdin as input)",
+		Usage:                  "Competitive Programming Difference tool. Compare two files (or stdin).",
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -63,24 +63,11 @@ func App() {
 		},
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args().Slice()
-			return mainCommand(
-				ctx.Bool("short"),
-				!ctx.Bool("no-color"),
-				ctx.Bool("duration"),
-				ctx.Bool("linenum"),
-				ctx.Bool("relative"),
-				ctx.Bool("abort"),
-				ctx.Bool("wrong"),
-				ctx.String("error"),
-				args,
-			)
+			return mainCommand(newOptions(ctx, true), args)
 		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		// TODO: Not really a problem (maybe remove TODO) but this prints an error
-		// when the user passes a flag tha doesn't exist.
-		// The examples in the website also have this print (except the last example).
 		log.Fatal(err)
 	}
 }

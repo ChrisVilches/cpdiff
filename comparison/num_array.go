@@ -37,7 +37,7 @@ func (n NumArray) ShortDisplay() string {
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
 }
 
-func compareNums(first, second NumArray, error *big.Float, relativeErr bool) (ComparisonResult, *big.Float) {
+func compareNums(first, second NumArray, error *big.Float, useRelativeErr bool) (ComparisonResult, *big.Float) {
 	maxErr := big.NewFloat(0)
 
 	if len(first.nums) != len(second.nums) {
@@ -55,21 +55,17 @@ func compareNums(first, second NumArray, error *big.Float, relativeErr bool) (Co
 			continue
 		}
 
-		// TODO: Unit test error calculations. They seem a bit unstable (although it works).
-		diff := new(big.Float).Sub(a, b)
+		var err *big.Float
 
-		if relativeErr {
-			// TODO: After doing this change, I'm not sure if I should compare it (using bigMax)
-			// the same way as with the absolute error.
-			// Research what's the methodology for comparing this.
-			diff.Quo(diff, b)
+		if useRelativeErr {
+			err = util.RelError(a, b)
+		} else {
+			err = util.AbsError(a, b)
 		}
 
-		diff.Abs(diff)
+		maxErr.Set(util.BigMax(maxErr, err))
 
-		maxErr.Set(util.BigMax(maxErr, diff))
-
-		if diff.Cmp(error) == -1 {
+		if err.Cmp(error) == -1 {
 			approx = true
 		} else {
 			ok = false
@@ -78,9 +74,7 @@ func compareNums(first, second NumArray, error *big.Float, relativeErr bool) (Co
 
 	if !ok {
 		return ComparisonResults.Incorrect, maxErr
-	}
-
-	if approx {
+	} else if approx {
 		return ComparisonResults.Approx, maxErr
 	} else {
 		return ComparisonResults.Correct, maxErr
