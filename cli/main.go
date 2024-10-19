@@ -7,7 +7,9 @@ import (
 
 func App() error {
 	app := &cli.App{
-		Name:                   "cpdiff",
+		Name: "cpdiff",
+		// TODO: Version should be dynamic
+		Version:                "2.0.2",
 		Usage:                  "File difference tool for competitive programming",
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
