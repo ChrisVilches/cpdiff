@@ -18,10 +18,6 @@ func BigMax(a, b *big.Float) *big.Float {
 		return a
 	}
 
-	if a == nil && b == nil {
-		return nil
-	}
-
 	if a.Cmp(b) == 1 {
 		return a
 	}
@@ -43,9 +39,4 @@ func RelError(a, b *big.Float) *big.Float {
 	}
 
 	return r.Abs(r.Quo(r.Sub(a, b), b))
-
-	// TODO: After doing this change, I'm not sure
-	//    if I should compare it (using bigMax)
-	// the same way as with the absolute error.
-	// Research what's the methodology for comparing this.
 }
