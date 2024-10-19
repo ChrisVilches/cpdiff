@@ -228,6 +228,8 @@ func getBothStreams(args []string) ([]*os.File, error) {
 		files[0] = os.Stdin
 		files[1], err[0] = os.Open(args[0])
 	} else {
+		// TODO: This error should be outputted by the CLI framework.
+		// i.e. detected by the CLI module and outputted with pretty format.
 		return nil, errors.New("Should have 1 or 2 arguments")
 	}
 
@@ -244,12 +246,13 @@ func mainCommand(opts options, args []string) error {
 	startTime := time.Now()
 
 	files, err := getBothStreams(args)
-	defer files[0].Close()
-	defer files[1].Close()
 
 	if err != nil {
 		return err
 	}
+
+	defer files[0].Close()
+	defer files[1].Close()
 
 	input := bufio.NewScanner(files[0])
 	target := bufio.NewScanner(files[1])

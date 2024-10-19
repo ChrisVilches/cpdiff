@@ -8,7 +8,7 @@ import (
 func App() error {
 	app := &cli.App{
 		Name:                   "cpdiff",
-		Usage:                  "Competitive Programming Difference tool. Compare two files (or stdin).",
+		Usage:                  "File difference tool for competitive programming",
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
