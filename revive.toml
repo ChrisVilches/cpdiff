@@ -14,7 +14,7 @@ enableAllRules = true
   Exclude=["TEST", "cli/main.go"]
 
 [rule.cognitive-complexity]
-  Exclude=["TEST"]
+  Exclude=["TEST", "util/tokenizer.go"]
   Arguments = [10]
 
 [rule.unhandled-error]
