@@ -6,18 +6,23 @@ import (
 )
 
 type ComparisonEntry struct {
-	Lhs            Comparable
-	Rhs            Comparable
+	LHS            Comparable
+	RHS            Comparable
 	CmpRes         ComparisonResult
 	CmpRanges      []cmpRange
 	HasRealNumbers bool
 	MaxErr         *big.Float
 }
 
-func handleNumArrays(lhs, rhs NumArray, relativeErr bool, error *big.Float) ([]cmpRange, *big.Float, bool) {
-	cmpRanges, diff := compareNums(lhs, rhs, error, relativeErr)
+func handleNumArrays(
+	lhs,
+	rhs NumArray,
+	relativeErr bool,
+	allowedError *big.Float,
+) ([]cmpRange, *big.Float, bool) {
+	cmpRanges, diff := compareNums(lhs, rhs, allowedError, relativeErr)
 
-	return cmpRanges, diff, lhs.HasRealNumbers() || lhs.HasRealNumbers()
+	return cmpRanges, diff, lhs.HasRealNumbers() || rhs.HasRealNumbers()
 }
 
 func findGlobalResult(cmpRanges []cmpRange) ComparisonResult {
@@ -40,60 +45,59 @@ func findGlobalResult(cmpRanges []cmpRange) ComparisonResult {
 	return CmpRes.Correct
 }
 
+func newComparisonEntry(
+	lhs, rhs Comparable,
+	useRelativeErr bool,
+	allowedError *big.Float,
+) ComparisonEntry {
+	e := ComparisonEntry{LHS: lhs, RHS: rhs}
+
+	if lhs.Type() != rhs.Type() {
+		e.CmpRes = CmpRes.Incorrect
+	} else {
+		switch lhs.Type() {
+		case ComparableTypes.RawString:
+			e.CmpRanges = compareStrings(lhs.(RawString), rhs.(RawString))
+		case ComparableTypes.NumArray:
+			e.CmpRanges, e.MaxErr, e.HasRealNumbers = handleNumArrays(
+				lhs.(NumArray),
+				rhs.(NumArray),
+				useRelativeErr,
+				allowedError,
+			)
+		case ComparableTypes.Empty:
+			e.CmpRes = CmpRes.Correct
+		default:
+			panic("Wrong type")
+		}
+	}
+
+	if len(e.CmpRanges) != 0 {
+		e.CmpRes = findGlobalResult(e.CmpRanges)
+	}
+
+	return e
+}
+
 func Process(
 	lhsCh,
 	rhsCh chan string,
-	error *big.Float,
-	relativeErr bool,
+	allowedError *big.Float,
+	useRelativeErr bool,
 	entriesCh chan ComparisonEntry,
 ) {
 	for {
-		l, ok1 := <-lhsCh
-		r, ok2 := <-rhsCh
+		line1, ok1 := <-lhsCh
+		line2, ok2 := <-rhsCh
 
 		if !ok1 && !ok2 {
 			break
 		}
 
-		lhs := LineToComparable(l)
-		rhs := LineToComparable(r)
+		lhs := LineToComparable(line1)
+		rhs := LineToComparable(line2)
 
-		var cmp []cmpRange
-		maxErr := big.NewFloat(0)
-		hasRealNumbers := false
-		var globalResult ComparisonResult
-
-		if lhs.Type() != rhs.Type() {
-			globalResult = CmpRes.Incorrect
-		} else if lhs.Type() == ComparableTypes.NumArray {
-			cmp, maxErr, hasRealNumbers = handleNumArrays(
-				lhs.(NumArray),
-				rhs.(NumArray),
-				relativeErr,
-				error,
-			)
-		} else if lhs.Type() == ComparableTypes.RawString {
-			cmp = compareStrings(lhs.(RawString), rhs.(RawString))
-		} else if lhs.Type() == ComparableTypes.Empty {
-			globalResult = CmpRes.Correct
-		} else {
-			log.Fatalf("Wrong type")
-		}
-
-		if len(cmp) != 0 {
-			globalResult = findGlobalResult(cmp)
-		}
-
-		entry := ComparisonEntry{
-			Lhs:            lhs,
-			Rhs:            rhs,
-			MaxErr:         maxErr,
-			HasRealNumbers: hasRealNumbers,
-			CmpRanges:      cmp,
-			CmpRes:         globalResult,
-		}
-
-		entriesCh <- entry
+		entriesCh <- newComparisonEntry(lhs, rhs, useRelativeErr, allowedError)
 	}
 
 	close(entriesCh)

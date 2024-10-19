@@ -2,11 +2,10 @@ package cli
 
 import (
 	"github.com/urfave/cli/v2"
-	"log"
 	"os"
 )
 
-func App() {
+func App() error {
 	app := &cli.App{
 		Name:                   "cpdiff",
 		Usage:                  "Competitive Programming Difference tool. Compare two files (or stdin).",
@@ -74,11 +73,10 @@ func App() {
 		},
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args().Slice()
-			return mainCommand(newOptions(ctx, true), args)
+
+			return mainCommand(newOptions(ctx), args)
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
-	}
+	return app.Run(os.Args)
 }

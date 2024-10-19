@@ -1,5 +1,6 @@
 package util
 
+// revive:disable:cognitive-complexity
 func StringFieldsKeepWhitespace(s string) func(func(int, int) bool) {
 	return func(yield func(int, int) bool) {
 		state := 0
@@ -21,6 +22,7 @@ func StringFieldsKeepWhitespace(s string) func(func(int, int) bool) {
 					if !yield(idx, i) {
 						return
 					}
+
 					idx++
 					state = 1
 				}

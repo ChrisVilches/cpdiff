@@ -2,20 +2,23 @@ package cli
 
 import (
 	"bufio"
-	"cpdiff/cmp"
-	"cpdiff/util"
+	"errors"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"strings"
 	"time"
 
+	"cpdiff/cmp"
+	"cpdiff/util"
+
 	"github.com/fatih/color"
 )
 
-const separator = "\t\t"
-const defaultError = "0.0001"
+const (
+	separator    = "\t\t"
+	defaultError = "0.0001"
+)
 
 func shouldSkipLine(line string, opts options) bool {
 	return opts.removeWhitespace && len(line) == 0
@@ -44,22 +47,29 @@ func resultIcon(res cmp.ComparisonResult) string {
 }
 
 // A rather complex logic that picks the coloring function for each case.
-// e.g. Number sequences have ranges related to each item, not each character in the raw string. so they are handled differently from strings.
-func getColorFn(entry cmp.ComparisonEntry, short bool) func(s string, entry cmp.ComparisonEntry) string {
-	if short || entry.Lhs.Type() != entry.Rhs.Type() {
+// e.g. Number sequences have ranges related to each item, not each
+// character in the raw string. so they are handled differently from strings.
+func getColorFn(
+	entry cmp.ComparisonEntry,
+	short bool,
+) func(s string, entry cmp.ComparisonEntry) string {
+	if short || entry.LHS.Type() != entry.RHS.Type() {
 		return colorAll
 	}
 
-	if entry.Lhs.Type() == cmp.ComparableTypes.NumArray {
+	if entry.LHS.Type() == cmp.ComparableTypes.NumArray {
 		return colorFields
-	} else if entry.Lhs.Type() == cmp.ComparableTypes.RawString {
+	} else if entry.LHS.Type() == cmp.ComparableTypes.RawString {
 		return colorSubstrings
 	}
 
 	return colorAll
 }
 
-func showComparisonLine(entry cmp.ComparisonEntry, opts options, line int) bool {
+func showComparisonLine(
+	entry cmp.ComparisonEntry,
+	opts options, line int,
+) bool {
 	if opts.showOnlyWrong && entry.CmpRes != cmp.CmpRes.Incorrect {
 		return false
 	}
@@ -74,11 +84,11 @@ func showComparisonLine(entry cmp.ComparisonEntry, opts options, line int) bool 
 	var lhsText, rhsText string
 
 	if opts.short {
-		lhsText = entry.Lhs.ShortDisplay()
-		rhsText = entry.Rhs.ShortDisplay()
+		lhsText = entry.LHS.ShortDisplay()
+		rhsText = entry.RHS.ShortDisplay()
 	} else {
-		lhsText = entry.Lhs.Display()
-		rhsText = entry.Rhs.Display()
+		lhsText = entry.LHS.Display()
+		rhsText = entry.RHS.Display()
 	}
 
 	iconStr := resultIcon(entry.CmpRes)
@@ -92,10 +102,16 @@ func showComparisonLine(entry cmp.ComparisonEntry, opts options, line int) bool 
 	}
 
 	fmt.Printf("%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
+
 	return true
 }
 
-func showFullResult(fullResult fullResult, aborted bool, startTime, endTime time.Time, opts options) {
+func showFullResult(
+	fullResult fullResult,
+	aborted bool,
+	startTime, endTime time.Time,
+	opts options,
+) {
 	var duration string
 
 	if opts.showDuration {
@@ -103,9 +119,23 @@ func showFullResult(fullResult fullResult, aborted bool, startTime, endTime time
 	}
 
 	if fullResult.totalLines == fullResult.correct {
-		printfColor(color.FgGreen, opts.showColor, "Accepted %d/%d%s\n", fullResult.correct, fullResult.totalLines, duration)
+		printfColor(
+			color.FgGreen,
+			opts.showColor,
+			"Accepted %d/%d%s\n",
+			fullResult.correct,
+			fullResult.totalLines,
+			duration,
+		)
 	} else {
-		printfColor(color.FgRed, opts.showColor, "Wrong Answer %d/%d%s\n", fullResult.correct, fullResult.totalLines, duration)
+		printfColor(
+			color.FgRed,
+			opts.showColor,
+			"Wrong Answer %d/%d%s\n",
+			fullResult.correct,
+			fullResult.totalLines,
+			duration,
+		)
 	}
 
 	if aborted {
@@ -177,7 +207,7 @@ func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
 	}
 }
 
-func NewFullResult() fullResult {
+func newFullResult() fullResult {
 	return fullResult{
 		totalLines:     0,
 		correct:        0,
@@ -187,27 +217,42 @@ func NewFullResult() fullResult {
 	}
 }
 
+func getBothStreams(args []string) ([]*os.File, error) {
+	files := make([]*os.File, 2)
+	err := make([]error, 2)
+
+	if len(args) == 2 {
+		files[0], err[0] = os.Open(args[0])
+		files[1], err[1] = os.Open(args[1])
+	} else if len(args) == 1 {
+		files[0] = os.Stdin
+		files[1], err[0] = os.Open(args[0])
+	} else {
+		return nil, errors.New("Should have 1 or 2 arguments")
+	}
+
+	for _, e := range err {
+		if e != nil {
+			return nil, e
+		}
+	}
+
+	return files, nil
+}
+
 func mainCommand(opts options, args []string) error {
 	startTime := time.Now()
 
-	files := make([]*os.File, 2)
+	files, err := getBothStreams(args)
+	defer files[0].Close()
+	defer files[1].Close()
 
-	if len(args) == 2 {
-		files[0] = openFileOrExit(args[0])
-		files[1] = openFileOrExit(args[1])
-	} else if len(args) == 1 {
-		files[0] = os.Stdin
-		files[1] = openFileOrExit(args[0])
-	} else {
-		log.Fatal("Should have 1 or 2 arguments")
+	if err != nil {
+		return err
 	}
 
 	input := bufio.NewScanner(files[0])
 	target := bufio.NewScanner(files[1])
-
-	for _, f := range files {
-		defer f.Close()
-	}
 
 	const chSize = 100
 
@@ -221,7 +266,7 @@ func mainCommand(opts options, args []string) error {
 	go readLinesToChannel(target, rhsCh, opts)
 	go cmp.Process(lhsCh, rhsCh, opts.error, opts.useRelativeError, entries)
 
-	fullResult := NewFullResult()
+	fullResult := newFullResult()
 	printedLines := false
 
 	for entry := range entries {

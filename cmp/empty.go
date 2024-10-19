@@ -1,7 +1,6 @@
 package cmp
 
-type Empty struct {
-}
+type Empty struct{}
 
 func (Empty) Display() string {
 	return "-"

@@ -1,9 +1,10 @@
 package cmp
 
 import (
-	"github.com/google/go-cmp/cmp"
 	"math/big"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestHasRealNumbers(t *testing.T) {
@@ -40,6 +41,8 @@ func TestNumArrayShortDisplay(t *testing.T) {
 	}
 }
 
+const defaultError = 0.0001
+
 func TestCompareNums(t *testing.T) {
 	data := [][]string{
 		{"1 2 3", "1 2 3"},
@@ -52,7 +55,7 @@ func TestCompareNums(t *testing.T) {
 		{"1", "1.001"},
 	}
 
-	err := big.NewFloat(0.0001)
+	err := big.NewFloat(defaultError)
 
 	ans := [][]cmpRange{
 		{{From: 0, To: 3, Result: CmpRes.Correct}},
@@ -81,6 +84,7 @@ func TestCompareNums(t *testing.T) {
 
 func strToBigFloat(s string) *big.Float {
 	val, _ := new(big.Float).SetString(s)
+
 	return val
 }
 
@@ -93,7 +97,7 @@ func TestCompareNumsMaxErr(t *testing.T) {
 		{"0", "0.00000001"},
 	}
 
-	err := big.NewFloat(0.0001)
+	err := big.NewFloat(defaultError)
 
 	ans := []*big.Float{
 		strToBigFloat("0"),

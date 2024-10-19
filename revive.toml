@@ -1,0 +1,27 @@
+enableAllRules = true
+
+[rule.exported]
+  Disabled = true
+
+[rule.package-comments]
+  Disabled = true
+
+[rule.add-constant]
+  arguments = [{ maxLitCount = "1000", allowInts = "0,1,2" }]
+  Exclude=["TEST"]
+
+[rule.line-length-limit]
+  Exclude=["TEST", "cli/main.go"]
+
+[rule.cognitive-complexity]
+  Exclude=["TEST"]
+  Arguments = [10]
+
+[rule.unhandled-error]
+  arguments = ["fmt.Print", "fmt.Fprint", "fmt.Fprintln", "fmt.Printf", "fmt.Println"]
+
+[rule.flag-parameter]
+  Disabled = true
+
+[rule.unchecked-type-assertion]
+  Exclude=["TEST"]

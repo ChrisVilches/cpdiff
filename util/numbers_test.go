@@ -26,6 +26,7 @@ func TestBigMax(t *testing.T) {
 
 func strToBigFloat(s string) *big.Float {
 	val, _ := new(big.Float).SetString(s)
+
 	return val
 }
 

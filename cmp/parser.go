@@ -31,7 +31,7 @@ func LineToComparable(line string) Comparable {
 
 	if ok {
 		return NumArray{nums: nums, rawData: line}
-	} else {
-		return RawString{value: line}
 	}
+
+	return RawString{value: line}
 }

@@ -1,9 +1,10 @@
 package cmp
 
 import (
-	"cpdiff/util"
 	"fmt"
 	"math/big"
+
+	"cpdiff/util"
 )
 
 type NumArray struct {
@@ -37,7 +38,12 @@ func (n NumArray) ShortDisplay() string {
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
 }
 
-func compareNums(first, second NumArray, error *big.Float, useRelativeErr bool) ([]cmpRange, *big.Float) {
+func compareNums(
+	first,
+	second NumArray,
+	allowedError *big.Float,
+	useRelativeErr bool,
+) ([]cmpRange, *big.Float) {
 	n := len(first.nums)
 	m := len(second.nums)
 	size := min(n, m)
@@ -60,8 +66,9 @@ func compareNums(first, second NumArray, error *big.Float, useRelativeErr bool) 
 				err = util.AbsError(a, b)
 			}
 
-			if err.Cmp(error) == -1 {
+			if err.Cmp(allowedError) == -1 {
 				v = CmpRes.Approx
+
 				maxErr.Set(util.BigMax(maxErr, err))
 			} else {
 				v = CmpRes.Incorrect
@@ -72,7 +79,10 @@ func compareNums(first, second NumArray, error *big.Float, useRelativeErr bool) 
 	}
 
 	if n != m {
-		res = appendCmpRange(res, cmpRange{From: size, To: max(n, m), Result: CmpRes.Incorrect})
+		res = appendCmpRange(
+			res,
+			cmpRange{From: size, To: max(n, m), Result: CmpRes.Incorrect},
+		)
 	}
 
 	return res, maxErr

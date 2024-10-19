@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/fatih/color"
@@ -13,17 +12,10 @@ func warn(msg string) {
 	fmt.Fprintln(os.Stderr, msg)
 }
 
-func openFileOrExit(filePath string) *os.File {
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalf("File %s cannot be opened", filePath)
-	}
-	return file
-}
-
-func printfColor(c color.Attribute, useColor bool, s string, printArgs ...interface{}) {
+func printfColor(c color.Attribute, useColor bool, s string, printArgs ...any) {
 	if !useColor {
 		fmt.Printf(s, printArgs...)
+
 		return
 	}
 

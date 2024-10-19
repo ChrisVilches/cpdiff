@@ -1,9 +1,11 @@
 package cli
 
 import (
-	"cpdiff/util"
 	"fmt"
 	"math/big"
+	"os"
+
+	"cpdiff/util"
 
 	"github.com/urfave/cli/v2"
 )
@@ -20,29 +22,38 @@ type options struct {
 	error            *big.Float
 }
 
-func getConfigError(errorString string, outputWarnings bool) (res *big.Float) {
-	res = new(big.Float)
+func getConfigError(errorString string) (*big.Float, *string) {
+	res := new(big.Float)
 
 	res.SetString(defaultError)
 
 	if len(errorString) == 0 {
-		return
+		return res, nil
 	}
 
 	parsedVal := new(big.Float)
+	_, ok := parsedVal.SetString(errorString)
 
-	if _, ok := parsedVal.SetString(errorString); !ok || util.BigFloatOutsideRange(parsedVal, 0, 1) {
-		if outputWarnings {
-			warn(fmt.Sprintf("Error value is incorrect. Using default value %s\n", defaultError))
-		}
-		return
+	if !ok || util.BigFloatOutsideRange(parsedVal, 0, 1) {
+		warn := fmt.Sprintf(
+			"Error value is incorrect. Using default value %s\n",
+			defaultError,
+		)
+		return res, &warn
 	}
 
 	res.Set(parsedVal)
-	return
+
+	return res, nil
 }
 
-func newOptions(ctx *cli.Context, outputWarnings bool) options {
+func newOptions(ctx *cli.Context) options {
+	err, warn := getConfigError(ctx.String("error"))
+
+	if warn != nil {
+		fmt.Fprint(os.Stderr, warn)
+	}
+
 	res := options{
 		removeWhitespace: ctx.Bool("trim"),
 		short:            ctx.Bool("short"),
@@ -52,7 +63,7 @@ func newOptions(ctx *cli.Context, outputWarnings bool) options {
 		useRelativeError: ctx.Bool("relative"),
 		abortEarly:       ctx.Bool("abort"),
 		showOnlyWrong:    ctx.Bool("wrong"),
-		error:            getConfigError(ctx.String("error"), outputWarnings),
+		error:            err,
 	}
 
 	return res

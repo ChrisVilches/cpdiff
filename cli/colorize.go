@@ -3,6 +3,7 @@ package cli
 import (
 	"cpdiff/cmp"
 	"cpdiff/util"
+
 	"github.com/fatih/color"
 )
 
@@ -12,6 +13,7 @@ func colorSubstrings(s string, entry cmp.ComparisonEntry) string {
 	for _, elem := range entry.CmpRanges {
 		from := elem.From
 		to := min(elem.To, len(s))
+
 		if from > to {
 			break
 		}

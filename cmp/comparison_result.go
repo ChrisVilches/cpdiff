@@ -26,9 +26,9 @@ func appendCmpRange(list []cmpRange, newValue cmpRange) []cmpRange {
 
 	if last.To == newValue.From && last.Result == newValue.Result {
 		last.To = newValue.To
+
 		return list
 	}
 
 	return append(list, newValue)
-
 }
