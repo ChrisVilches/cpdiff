@@ -1,4 +1,4 @@
-package comparison
+package cmp
 
 import (
 	"github.com/google/go-cmp/cmp"

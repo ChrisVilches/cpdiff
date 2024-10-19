@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"cpdiff/comparison"
+	"cpdiff/cmp"
 	"cpdiff/util"
 	"github.com/fatih/color"
 )
 
-func colorSubstrings(s string, entry comparison.ComparisonEntry) string {
+func colorSubstrings(s string, entry cmp.ComparisonEntry) string {
 	res := ""
 
 	for _, elem := range entry.CmpRanges {
@@ -23,7 +23,7 @@ func colorSubstrings(s string, entry comparison.ComparisonEntry) string {
 	return res
 }
 
-func colorFields(s string, entry comparison.ComparisonEntry) string {
+func colorFields(s string, entry cmp.ComparisonEntry) string {
 	res := ""
 	prev := 0
 	j := 0
@@ -43,6 +43,6 @@ func colorFields(s string, entry comparison.ComparisonEntry) string {
 	return res
 }
 
-func colorAll(s string, entry comparison.ComparisonEntry) string {
+func colorAll(s string, entry cmp.ComparisonEntry) string {
 	return color.New(resultColor(entry.CmpRes)).Sprint(s)
 }

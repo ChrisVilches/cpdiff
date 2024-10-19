@@ -2,7 +2,7 @@ package cli
 
 import (
 	"bufio"
-	"cpdiff/comparison"
+	"cpdiff/cmp"
 	"cpdiff/util"
 	"fmt"
 	"log"
@@ -21,22 +21,22 @@ func shouldSkipLine(line string, opts options) bool {
 	return opts.removeWhitespace && len(line) == 0
 }
 
-func resultColor(res comparison.ComparisonResult) color.Attribute {
+func resultColor(res cmp.ComparisonResult) color.Attribute {
 	switch res {
-	case comparison.CmpRes.Correct:
+	case cmp.CmpRes.Correct:
 		return color.FgGreen
-	case comparison.CmpRes.Approx:
+	case cmp.CmpRes.Approx:
 		return color.FgYellow
 	default:
 		return color.FgRed
 	}
 }
 
-func resultIcon(res comparison.ComparisonResult) string {
+func resultIcon(res cmp.ComparisonResult) string {
 	switch res {
-	case comparison.CmpRes.Correct:
+	case cmp.CmpRes.Correct:
 		return ""
-	case comparison.CmpRes.Approx:
+	case cmp.CmpRes.Approx:
 		return "≈ "
 	default:
 		return "X "
@@ -45,22 +45,22 @@ func resultIcon(res comparison.ComparisonResult) string {
 
 // A rather complex logic that picks the coloring function for each case.
 // e.g. Number sequences have ranges related to each item, not each character in the raw string. so they are handled differently from strings.
-func getColorFn(entry comparison.ComparisonEntry, short bool) func(s string, entry comparison.ComparisonEntry) string {
+func getColorFn(entry cmp.ComparisonEntry, short bool) func(s string, entry cmp.ComparisonEntry) string {
 	if short || entry.Lhs.Type() != entry.Rhs.Type() {
 		return colorAll
 	}
 
-	if entry.Lhs.Type() == comparison.ComparableTypes.NumArray {
+	if entry.Lhs.Type() == cmp.ComparableTypes.NumArray {
 		return colorFields
-	} else if entry.Lhs.Type() == comparison.ComparableTypes.RawString {
+	} else if entry.Lhs.Type() == cmp.ComparableTypes.RawString {
 		return colorSubstrings
 	}
 
 	return colorAll
 }
 
-func showComparisonLine(entry comparison.ComparisonEntry, opts options, line int) bool {
-	if opts.showOnlyWrong && entry.CmpRes != comparison.CmpRes.Incorrect {
+func showComparisonLine(entry cmp.ComparisonEntry, opts options, line int) bool {
+	if opts.showOnlyWrong && entry.CmpRes != cmp.CmpRes.Incorrect {
 		return false
 	}
 
@@ -156,15 +156,15 @@ type fullResult struct {
 	maxErr         *big.Float
 }
 
-func (v fullResult) putEntry(entry comparison.ComparisonEntry) fullResult {
+func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
 	correct := v.correct
 	approx := v.approx
 
 	switch entry.CmpRes {
-	case comparison.CmpRes.Approx:
+	case cmp.CmpRes.Approx:
 		approx++
 		correct++
-	case comparison.CmpRes.Correct:
+	case cmp.CmpRes.Correct:
 		correct++
 	}
 
@@ -211,7 +211,7 @@ func mainCommand(opts options, args []string) error {
 
 	const chSize = 100
 
-	entries := make(chan comparison.ComparisonEntry, chSize)
+	entries := make(chan cmp.ComparisonEntry, chSize)
 	lhsCh := make(chan string, chSize)
 	rhsCh := make(chan string, chSize)
 
@@ -219,7 +219,7 @@ func mainCommand(opts options, args []string) error {
 
 	go readLinesToChannel(input, lhsCh, opts)
 	go readLinesToChannel(target, rhsCh, opts)
-	go comparison.Process(lhsCh, rhsCh, opts.error, opts.useRelativeError, entries)
+	go cmp.Process(lhsCh, rhsCh, opts.error, opts.useRelativeError, entries)
 
 	fullResult := NewFullResult()
 	printedLines := false
@@ -231,7 +231,7 @@ func mainCommand(opts options, args []string) error {
 			printedLines = true
 		}
 
-		if opts.abortEarly && entry.CmpRes == comparison.CmpRes.Incorrect {
+		if opts.abortEarly && entry.CmpRes == cmp.CmpRes.Incorrect {
 			aborted = true
 			break
 		}

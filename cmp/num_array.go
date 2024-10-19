@@ -1,4 +1,4 @@
-package comparison
+package cmp
 
 import (
 	"cpdiff/util"
