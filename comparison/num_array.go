@@ -37,46 +37,43 @@ func (n NumArray) ShortDisplay() string {
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
 }
 
-func compareNums(first, second NumArray, error *big.Float, useRelativeErr bool) (ComparisonResult, *big.Float) {
+func compareNums(first, second NumArray, error *big.Float, useRelativeErr bool) ([]cmpRange, *big.Float) {
+	n := len(first.nums)
+	m := len(second.nums)
+	size := min(n, m)
+	res := []cmpRange{}
 	maxErr := big.NewFloat(0)
 
-	if len(first.nums) != len(second.nums) {
-		return ComparisonResults.Incorrect, maxErr
-	}
-
-	approx := false
-	ok := true
-
-	for i := range len(first.nums) {
+	for i := 0; i < size; i++ {
+		var v ComparisonResult
 		a := first.nums[i]
 		b := second.nums[i]
 
 		if a.Cmp(b) == 0 {
-			continue
-		}
-
-		var err *big.Float
-
-		if useRelativeErr {
-			err = util.RelError(a, b)
+			v = CmpRes.Correct
 		} else {
-			err = util.AbsError(a, b)
+			var err *big.Float
+
+			if useRelativeErr {
+				err = util.RelError(a, b)
+			} else {
+				err = util.AbsError(a, b)
+			}
+
+			if err.Cmp(error) == -1 {
+				v = CmpRes.Approx
+				maxErr.Set(util.BigMax(maxErr, err))
+			} else {
+				v = CmpRes.Incorrect
+			}
 		}
 
-		maxErr.Set(util.BigMax(maxErr, err))
-
-		if err.Cmp(error) == -1 {
-			approx = true
-		} else {
-			ok = false
-		}
+		res = appendCmpRange(res, cmpRange{From: i, To: i + 1, Result: v})
 	}
 
-	if !ok {
-		return ComparisonResults.Incorrect, maxErr
-	} else if approx {
-		return ComparisonResults.Approx, maxErr
-	} else {
-		return ComparisonResults.Correct, maxErr
+	if n != m {
+		res = appendCmpRange(res, cmpRange{From: size, To: max(n, m), Result: CmpRes.Incorrect})
 	}
+
+	return res, maxErr
 }

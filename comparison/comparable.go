@@ -1,3 +1,5 @@
+// TODO: Rename this package to "cmp" or something smaller
+// But do that in a commit that only contains that change.
 package comparison
 
 type Comparable interface {

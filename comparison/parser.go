@@ -1,13 +1,11 @@
 package comparison
 
 import (
-	"cpdiff/util"
 	"math/big"
 	"strings"
 )
 
 func toNumArray(s string) ([]*big.Float, bool) {
-
 	parts := strings.Fields(s)
 	res := []*big.Float{}
 
@@ -25,7 +23,7 @@ func toNumArray(s string) ([]*big.Float, bool) {
 }
 
 func LineToComparable(line string) Comparable {
-	if util.IsEmptyLine(line) {
+	if len(line) == 0 {
 		return Empty{}
 	}
 
@@ -34,6 +32,6 @@ func LineToComparable(line string) Comparable {
 	if ok {
 		return NumArray{nums: nums, rawData: line}
 	} else {
-		return RawString{value: line, rawData: line}
+		return RawString{value: line}
 	}
 }

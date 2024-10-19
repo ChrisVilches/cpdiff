@@ -5,33 +5,62 @@ import (
 	"cpdiff/comparison"
 	"cpdiff/util"
 	"fmt"
-	"github.com/fatih/color"
 	"log"
 	"math/big"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 const separator = "\t\t"
 const defaultError = "0.0001"
 
-func shouldSkipLine(line string) bool {
-	return util.IsEmptyLine(line)
+func shouldSkipLine(line string, opts options) bool {
+	return opts.removeWhitespace && len(line) == 0
 }
 
-func iconColor(entry comparison.ComparisonEntry) (color.Attribute, string) {
-	switch entry.CmpRes {
-	case comparison.ComparisonResults.Correct:
-		return color.FgGreen, ""
-	case comparison.ComparisonResults.Approx:
-		return color.FgYellow, "≈ "
+func resultColor(res comparison.ComparisonResult) color.Attribute {
+	switch res {
+	case comparison.CmpRes.Correct:
+		return color.FgGreen
+	case comparison.CmpRes.Approx:
+		return color.FgYellow
 	default:
-		return color.FgRed, "X "
+		return color.FgRed
 	}
 }
 
+func resultIcon(res comparison.ComparisonResult) string {
+	switch res {
+	case comparison.CmpRes.Correct:
+		return ""
+	case comparison.CmpRes.Approx:
+		return "≈ "
+	default:
+		return "X "
+	}
+}
+
+// A rather complex logic that picks the coloring function for each case.
+// e.g. Number sequences have ranges related to each item, not each character in the raw string. so they are handled differently from strings.
+func getColorFn(entry comparison.ComparisonEntry, short bool) func(s string, entry comparison.ComparisonEntry) string {
+	if short || entry.Lhs.Type() != entry.Rhs.Type() {
+		return colorAll
+	}
+
+	if entry.Lhs.Type() == comparison.ComparableTypes.NumArray {
+		return colorFields
+	} else if entry.Lhs.Type() == comparison.ComparableTypes.RawString {
+		return colorSubstrings
+	}
+
+	return colorAll
+}
+
 func showComparisonLine(entry comparison.ComparisonEntry, opts options, line int) bool {
-	if opts.showOnlyWrong && entry.CmpRes != comparison.ComparisonResults.Incorrect {
+	if opts.showOnlyWrong && entry.CmpRes != comparison.CmpRes.Incorrect {
 		return false
 	}
 
@@ -52,13 +81,21 @@ func showComparisonLine(entry comparison.ComparisonEntry, opts options, line int
 		rhsText = entry.Rhs.Display()
 	}
 
-	colorAttribute, iconStr := iconColor(entry)
+	iconStr := resultIcon(entry.CmpRes)
 
-	printfColor(colorAttribute, opts.showColor, "%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
+	if opts.showColor {
+		applyColor := getColorFn(entry, opts.short)
+
+		lhsText = applyColor(lhsText, entry)
+		rhsText = applyColor(rhsText, entry)
+		iconStr = color.New(resultColor(entry.CmpRes)).Sprint(iconStr)
+	}
+
+	fmt.Printf("%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
 	return true
 }
 
-func showFullResult(fullResult FullResult, aborted bool, startTime, endTime time.Time, opts options) {
+func showFullResult(fullResult fullResult, aborted bool, startTime, endTime time.Time, opts options) {
 	var duration string
 
 	if opts.showDuration {
@@ -93,11 +130,15 @@ func showFullResult(fullResult FullResult, aborted bool, startTime, endTime time
 	}
 }
 
-func readLinesToChannel(buf *bufio.Scanner, ch chan string) {
+func readLinesToChannel(buf *bufio.Scanner, ch chan string, opts options) {
 	for buf.Scan() {
 		line := buf.Text()
 
-		if shouldSkipLine(line) {
+		if opts.removeWhitespace {
+			line = strings.TrimSpace(line)
+		}
+
+		if shouldSkipLine(line, opts) {
 			continue
 		}
 
@@ -107,10 +148,7 @@ func readLinesToChannel(buf *bufio.Scanner, ch chan string) {
 	close(ch)
 }
 
-// TODO: CHange the name of this struct and related methods/parameters because it should be more like
-//
-//	"full result" or something like that.
-type FullResult struct {
+type fullResult struct {
 	totalLines     int
 	correct        int
 	approx         int
@@ -118,19 +156,19 @@ type FullResult struct {
 	maxErr         *big.Float
 }
 
-func (v FullResult) putEntry(entry comparison.ComparisonEntry) FullResult {
+func (v fullResult) putEntry(entry comparison.ComparisonEntry) fullResult {
 	correct := v.correct
 	approx := v.approx
 
 	switch entry.CmpRes {
-	case comparison.ComparisonResults.Approx:
+	case comparison.CmpRes.Approx:
 		approx++
 		correct++
-	case comparison.ComparisonResults.Correct:
+	case comparison.CmpRes.Correct:
 		correct++
 	}
 
-	return FullResult{
+	return fullResult{
 		totalLines:     v.totalLines + 1,
 		correct:        correct,
 		approx:         approx,
@@ -139,8 +177,8 @@ func (v FullResult) putEntry(entry comparison.ComparisonEntry) FullResult {
 	}
 }
 
-func NewFullResult() FullResult {
-	return FullResult{
+func NewFullResult() fullResult {
+	return fullResult{
 		totalLines:     0,
 		correct:        0,
 		approx:         0,
@@ -171,19 +209,16 @@ func mainCommand(opts options, args []string) error {
 		defer f.Close()
 	}
 
-	// TODO: Lol? it was possible to define constants inside functions.
-	// I need to change many things I think.
 	const chSize = 100
 
-	// TODO: should these channels have size???? This is very important to get right.
 	entries := make(chan comparison.ComparisonEntry, chSize)
 	lhsCh := make(chan string, chSize)
 	rhsCh := make(chan string, chSize)
 
 	aborted := false
 
-	go readLinesToChannel(input, lhsCh)
-	go readLinesToChannel(target, rhsCh)
+	go readLinesToChannel(input, lhsCh, opts)
+	go readLinesToChannel(target, rhsCh, opts)
 	go comparison.Process(lhsCh, rhsCh, opts.error, opts.useRelativeError, entries)
 
 	fullResult := NewFullResult()
@@ -196,7 +231,7 @@ func mainCommand(opts options, args []string) error {
 			printedLines = true
 		}
 
-		if opts.abortEarly && entry.CmpRes == comparison.ComparisonResults.Incorrect {
+		if opts.abortEarly && entry.CmpRes == comparison.CmpRes.Incorrect {
 			aborted = true
 			break
 		}

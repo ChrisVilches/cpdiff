@@ -8,8 +8,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// TODO: Should this be capitalized simply because it's a struct? I don't want to export it.
-// The same applies to other structs I may have somewhere else.
 type options struct {
 	short            bool
 	showColor        bool
@@ -18,6 +16,7 @@ type options struct {
 	useRelativeError bool
 	abortEarly       bool
 	showOnlyWrong    bool
+	removeWhitespace bool
 	error            *big.Float
 }
 
@@ -26,7 +25,7 @@ func getConfigError(errorString string, outputWarnings bool) (res *big.Float) {
 
 	res.SetString(defaultError)
 
-	if util.IsEmptyLine(errorString) {
+	if len(errorString) == 0 {
 		return
 	}
 
@@ -45,6 +44,7 @@ func getConfigError(errorString string, outputWarnings bool) (res *big.Float) {
 
 func newOptions(ctx *cli.Context, outputWarnings bool) options {
 	res := options{
+		removeWhitespace: ctx.Bool("trim"),
 		short:            ctx.Bool("short"),
 		showColor:        !ctx.Bool("no-color"),
 		showDuration:     ctx.Bool("duration"),
