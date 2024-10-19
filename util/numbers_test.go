@@ -22,6 +22,16 @@ func TestBigMax(t *testing.T) {
 			t.Fatalf("BigMax(%s, %s) expected to be %s", a.String(), b.String(), c.String())
 		}
 	}
+
+	if BigMax(big.NewFloat(5), nil).String() != "5" {
+		t.Fatalf("expected to return the non-nil value")
+	}
+	if BigMax(nil, big.NewFloat(7)).String() != "7" {
+		t.Fatalf("expected to return the non-nil value")
+	}
+	if BigMax(nil, nil) != nil {
+		t.Fatalf("expected to return nil")
+	}
 }
 
 func strToBigFloat(s string) *big.Float {

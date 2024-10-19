@@ -1,7 +1,6 @@
 package cmp
 
 import (
-	"log"
 	"math/big"
 )
 

@@ -12,15 +12,16 @@ func App() error {
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
+				Name:    "ignore-empty",
+				Aliases: []string{"i"},
+				Value:   true,
+				Usage:   "Ignore empty lines",
+			},
+			&cli.BoolFlag{
 				Name:    "trim",
 				Aliases: []string{"t"},
 				Value:   true,
-				// TODO: This one affects mostly how empty lines and raw strings are handled, but not number sequences.
-				// Maybe rename it "strict presentation" --strict-presentation -p
-				// THough that still doesn't explain why numbers are still kept
-				// Maybe just explain that it only affects how empty and raw strings are handled, but not numbers or number sequences.
-				// Yes, just put that phrase in the explanation, explain it in few words.
-				Usage: "Trim and remove trailing/leading whitespace and ignore empty lines (lines that contain numbers or number sequences are still compared item-wise, ignoring extra whitespace)",
+				Usage:   "Trim leading and trailing spaces from lines",
 			},
 			&cli.BoolFlag{
 				Name:    "wrong",

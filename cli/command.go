@@ -21,7 +21,7 @@ const (
 )
 
 func shouldSkipLine(line string, opts options) bool {
-	return opts.removeWhitespace && len(line) == 0
+	return opts.skipEmptyLines && len(line) == 0
 }
 
 func resultColor(res cmp.ComparisonResult) color.Attribute {
@@ -164,7 +164,7 @@ func readLinesToChannel(buf *bufio.Scanner, ch chan string, opts options) {
 	for buf.Scan() {
 		line := buf.Text()
 
-		if opts.removeWhitespace {
+		if opts.trim {
 			line = strings.TrimSpace(line)
 		}
 

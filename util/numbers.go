@@ -10,6 +10,18 @@ func BigFloatOutsideRange(bigFloat *big.Float, lo, hi float64) bool {
 }
 
 func BigMax(a, b *big.Float) *big.Float {
+	if a == nil {
+		return b
+	}
+
+	if b == nil {
+		return a
+	}
+
+	if a == nil && b == nil {
+		return nil
+	}
+
 	if a.Cmp(b) == 1 {
 		return a
 	}

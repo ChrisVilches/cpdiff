@@ -15,10 +15,11 @@ type options struct {
 	showColor        bool
 	showDuration     bool
 	showLineNum      bool
+	skipEmptyLines   bool
 	useRelativeError bool
 	abortEarly       bool
 	showOnlyWrong    bool
-	removeWhitespace bool
+	trim             bool
 	error            *big.Float
 }
 
@@ -55,7 +56,7 @@ func newOptions(ctx *cli.Context) options {
 	}
 
 	res := options{
-		removeWhitespace: ctx.Bool("trim"),
+		trim:             ctx.Bool("trim"),
 		short:            ctx.Bool("short"),
 		showColor:        !ctx.Bool("no-color"),
 		showDuration:     ctx.Bool("duration"),
@@ -63,6 +64,7 @@ func newOptions(ctx *cli.Context) options {
 		useRelativeError: ctx.Bool("relative"),
 		abortEarly:       ctx.Bool("abort"),
 		showOnlyWrong:    ctx.Bool("wrong"),
+		skipEmptyLines:   ctx.Bool("ignore-empty"),
 		error:            err,
 	}
 
