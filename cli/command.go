@@ -105,7 +105,6 @@ func showComparisonLine(
 			return false, err
 		}
 
-		// TODO: verify removing this if breaks the tests.
 		if iconStr != "" {
 			iconStr = color.New(resultColor(entry.CmpRes)).Sprint(iconStr)
 		}
@@ -129,7 +128,7 @@ func showFullResult(
 	}
 
 	if fullResult.totalLines == fullResult.correct {
-		printfColor(
+		printfLnColor(
 			color.FgGreen,
 			opts.showColor,
 			"Accepted %d/%d%s",
@@ -138,7 +137,7 @@ func showFullResult(
 			duration,
 		)
 	} else {
-		printfColor(
+		printfLnColor(
 			color.FgRed,
 			opts.showColor,
 			"Wrong Answer %d/%d%s",
@@ -149,7 +148,7 @@ func showFullResult(
 	}
 
 	if aborted {
-		printfColor(color.FgRed, opts.showColor, "Aborted")
+		printfLnColor(color.FgRed, opts.showColor, "Aborted")
 	}
 
 	if fullResult.hasRealNumbers {
@@ -159,7 +158,7 @@ func showFullResult(
 			errType = "relative"
 		}
 
-		printfColor(
+		printfLnColor(
 			color.FgYellow,
 			opts.showColor,
 			"Max error found was %s (using %s error of %s)",

@@ -2,10 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"os"
-
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
+	"os"
 )
+
+const ForceColorFlag = "FORCE_COLOR"
 
 const defaultError = "0.0001"
 
@@ -79,6 +81,10 @@ var flags = []cli.Flag{
 }
 
 func App(packageName, description, descriptionLong, version string) error {
+	if os.Getenv(ForceColorFlag) == "1" {
+		color.NoColor = false
+	}
+
 	app := &cli.App{
 		Name:                   packageName,
 		Version:                version,

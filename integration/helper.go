@@ -1,34 +1,14 @@
 package integration
 
 import (
+	"cpdiff/cli"
 	"fmt"
-	"github.com/creack/pty"
 	"github.com/fatih/color"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 )
-
-func readFileLines(f *os.File) []string {
-	buf := strings.Builder{}
-	_, err := io.Copy(&buf, f)
-
-	if err != nil {
-		// TODO: It panics, but it still reads....
-		// panic(err)
-	}
-
-	trimmed := strings.TrimSpace(buf.String())
-	lines := strings.Split(trimmed, "\n")
-
-	for i := range len(lines) {
-		lines[i] = strings.TrimSpace(lines[i])
-	}
-
-	return lines
-}
 
 func expectLineCount(t *testing.T, lines []string, count int) {
 	if len(lines) != count {
@@ -42,7 +22,6 @@ func expectLinesNotContain(t *testing.T, lines []string, s string) {
 			t.Fatalf("expected output not to contain text %s", s)
 		}
 	}
-
 }
 
 func expectLinesContain(t *testing.T, lines []string, s string) {
@@ -61,14 +40,29 @@ func test(t *testing.T, actual, expected string) {
 	}
 }
 
-func getLines(testCaseNum int, flags ...string) []string {
-	/// TODO: Verify this line (removed) breaks everything.
-	color.NoColor = false
-	executable := strings.TrimSpace(os.Getenv("CPDIFF_INTEGRATION_TEST_EXECUTABLE"))
+func bytesIntoLines(bytes []byte) []string {
+	trimmed := strings.TrimSpace(string(bytes))
+	lines := strings.Split(trimmed, "\n")
+
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+	}
+
+	return lines
+}
+
+func getExecutableName() string {
+	executable := strings.TrimSpace(os.Getenv("INTEGRATION_TEST_EXECUTABLE"))
 
 	if len(executable) == 0 {
 		panic("Executable is not defined")
 	}
+
+	return executable
+}
+
+func getLines(testCaseNum int, flags ...string) []string {
+	color.NoColor = false
 
 	inFile := fmt.Sprintf("./data/%d/in", testCaseNum)
 	ansFile := fmt.Sprintf("./data/%d/ans", testCaseNum)
@@ -76,14 +70,14 @@ func getLines(testCaseNum int, flags ...string) []string {
 	flags = append(flags, inFile)
 	flags = append(flags, ansFile)
 
-	cmd := exec.Command(executable, flags...)
-	f, err := pty.Start(cmd)
+	cmd := exec.Command(getExecutableName(), flags...)
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=1", cli.ForceColorFlag))
+
+	bytes, err := cmd.Output()
 
 	if err != nil {
 		panic(err)
 	}
 
-	lines := readFileLines(f)
-	f.Close()
-	return lines
+	return bytesIntoLines(bytes)
 }
