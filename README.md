@@ -24,7 +24,7 @@ Linting
 revive --formatter stylish ./...
 ```
 
-For unit and integration tests, build the project, then set its path to the environment variable:
+In order to run tests, first build the project, then set the environment variable below to the path of the executable:
 
 ```sh
 go build
