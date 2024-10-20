@@ -10,7 +10,8 @@ import (
 )
 
 // TODO: test these two-pointer methods.
-// TODO: I think the min() does something weird (specially to the last part of the string)
+// TODO: I think the min() does something weird (specially
+// to the last part of the string)
 func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 	res := strings.Builder{}
 

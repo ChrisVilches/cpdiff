@@ -1,7 +1,6 @@
-package util
+package big
 
 import (
-	"math/big"
 	"testing"
 )
 
@@ -14,30 +13,24 @@ func TestBigMax(t *testing.T) {
 	}
 
 	for _, testCase := range data {
-		a := big.NewFloat(testCase[0])
-		b := big.NewFloat(testCase[1])
-		c := big.NewFloat(testCase[2])
+		a := NewFromFloat64(testCase[0])
+		b := NewFromFloat64(testCase[1])
+		c := NewFromFloat64(testCase[2])
 
-		if BigMax(a, b).Cmp(c) != 0 {
+		if !BigDecimalMax(a, b).ExactEq(c) {
 			t.Fatalf("BigMax(%s, %s) expected to be %s", a.String(), b.String(), c.String())
 		}
 	}
 
-	if BigMax(big.NewFloat(5), nil).String() != "5" {
+	if BigDecimalMax(NewFromFloat64(5), nil).String() != "5" {
 		t.Fatalf("expected to return the non-nil value")
 	}
-	if BigMax(nil, big.NewFloat(7)).String() != "7" {
+	if BigDecimalMax(nil, NewFromFloat64(7)).String() != "7" {
 		t.Fatalf("expected to return the non-nil value")
 	}
-	if BigMax(nil, nil) != nil {
+	if BigDecimalMax(nil, nil) != nil {
 		t.Fatalf("expected to return nil")
 	}
-}
-
-func strToBigFloat(s string) *big.Float {
-	val, _ := new(big.Float).SetString(s)
-
-	return val
 }
 
 func TestAbsError(t *testing.T) {
@@ -50,12 +43,13 @@ func TestAbsError(t *testing.T) {
 	}
 
 	for _, testCase := range data {
-		a := strToBigFloat(testCase[0])
-		b := strToBigFloat(testCase[1])
-		c := strToBigFloat(testCase[2])
-		res := AbsError(a, b)
+		a := NewFromStringUnsafe(testCase[0])
+		b := NewFromStringUnsafe(testCase[1])
+		c := NewFromStringUnsafe(testCase[2])
+		res := absError(a, b)
 
-		if res.String() != c.String() {
+		// TODO: I think this one is wrong, because it won't be == exactly. Or would it????
+		if !res.ExactEq(c) {
 			t.Fatalf("expected error to be %s but got %s", c.String(), res.String())
 		}
 	}
@@ -63,10 +57,10 @@ func TestAbsError(t *testing.T) {
 
 func TestRelError(t *testing.T) {
 	data := [][]string{
-		{"1.41421356237", "1.41", "0.002988342106"},
-		{"5", "5.55", "0.0990990991"},
-		{"5", "9.55", "0.4764397906"},
-		{"-1", "1.5", "1.666666667"},
+		{"1.41421356237", "1.41", "0.002988342106382979"},
+		{"5", "5.55", "0.09909909909909910"},
+		{"5", "9.55", "0.4764397905759162"},
+		{"-1", "1.5", "1.666666666666667"},
 		{"1.5", "1.5", "0"},
 		{"0", "1", "1"},
 		{"1", "0", "+Inf"},
@@ -74,12 +68,12 @@ func TestRelError(t *testing.T) {
 	}
 
 	for _, testCase := range data {
-		a := strToBigFloat(testCase[0])
-		b := strToBigFloat(testCase[1])
-		c := strToBigFloat(testCase[2])
-		res := RelError(a, b)
+		a := NewFromStringUnsafe(testCase[0])
+		b := NewFromStringUnsafe(testCase[1])
+		c := NewFromStringUnsafe(testCase[2])
+		res := relError(a, b)
 
-		if res.String() != c.String() {
+		if !res.ExactEq(c) {
 			t.Fatalf("expected error to be %s but got %s", c.String(), res.String())
 		}
 	}

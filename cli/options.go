@@ -1,12 +1,8 @@
 package cli
 
 import (
+	"cpdiff/big"
 	"fmt"
-	"math/big"
-	"os"
-
-	"cpdiff/util"
-
 	"github.com/urfave/cli/v2"
 )
 
@@ -21,39 +17,36 @@ type options struct {
 	showOnlyWrong    bool
 	trim             bool
 	numbers          bool
-	error            *big.Float
+	error            *big.Decimal
 }
 
-func getConfigError(errorString string) (*big.Float, *string) {
-	res := new(big.Float)
-
-	res.SetString(defaultError)
+func getConfigError(errorString string) (*big.Decimal, error) {
+	res := big.NewFromStringUnsafe(defaultError)
 
 	if len(errorString) == 0 {
 		return res, nil
 	}
 
-	parsedVal := new(big.Float)
-	_, ok := parsedVal.SetString(errorString)
+	parsedVal, ok := big.NewFromString(errorString)
 
-	if !ok || util.BigFloatOutsideRange(parsedVal, 0, 1) {
-		warn := fmt.Sprintf(
-			"Error value is incorrect. Using default value %s\n",
+	// TODO: I think the reason I was using <= in the Cmp is because
+	// I don't want it to be 0 or 1, but let'S just allow it?????
+	if !ok || parsedVal.OutsideRange(0, 1) {
+		warn := fmt.Errorf(
+			"error value is incorrect (using default value %s)",
 			defaultError,
 		)
-		return res, &warn
+		return res, warn
 	}
 
-	res.Set(parsedVal)
-
-	return res, nil
+	return parsedVal, nil
 }
 
 func newOptions(ctx *cli.Context) options {
-	err, warn := getConfigError(ctx.String("error"))
+	err, warnMsg := getConfigError(ctx.String("error"))
 
-	if warn != nil {
-		fmt.Fprint(os.Stderr, warn)
+	if warnMsg != nil {
+		warn(warnMsg)
 	}
 
 	res := options{

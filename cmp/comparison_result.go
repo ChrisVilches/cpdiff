@@ -1,5 +1,6 @@
 package cmp
 
+// TODO: Naming is inconsistent (type and enum)
 type ComparisonResult int
 
 var CmpRes = struct {

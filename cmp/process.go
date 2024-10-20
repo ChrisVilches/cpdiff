@@ -1,7 +1,7 @@
 package cmp
 
 import (
-	"math/big"
+	"cpdiff/big"
 )
 
 type ComparisonEntry struct {
@@ -10,15 +10,15 @@ type ComparisonEntry struct {
 	CmpRes         ComparisonResult
 	CmpRanges      []cmpRange
 	HasRealNumbers bool
-	MaxErr         *big.Float
+	MaxErr         *big.Decimal
 }
 
 func handleNumArrays(
 	lhs,
 	rhs NumArray,
 	relativeErr bool,
-	allowedError *big.Float,
-) ([]cmpRange, *big.Float, bool) {
+	allowedError *big.Decimal,
+) ([]cmpRange, *big.Decimal, bool) {
 	cmpRanges, diff := compareNums(lhs, rhs, allowedError, relativeErr)
 
 	return cmpRanges, diff, lhs.HasRealNumbers() || rhs.HasRealNumbers()
@@ -47,7 +47,7 @@ func findGlobalResult(cmpRanges []cmpRange) ComparisonResult {
 func newComparisonEntry(
 	lhs, rhs Comparable,
 	useRelativeErr bool,
-	allowedError *big.Float,
+	allowedError *big.Decimal,
 ) ComparisonEntry {
 	e := ComparisonEntry{LHS: lhs, RHS: rhs}
 
@@ -81,7 +81,7 @@ func newComparisonEntry(
 func Process(
 	lhsCh,
 	rhsCh chan string,
-	allowedError *big.Float,
+	allowedError *big.Decimal,
 	useRelativeErr bool,
 	useNumbers bool,
 	entriesCh chan ComparisonEntry,

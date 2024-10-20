@@ -2,21 +2,18 @@ package cli
 
 import (
 	"bufio"
+	"cpdiff/big"
+	"cpdiff/cmp"
 	"fmt"
-	"math/big"
 	"os"
 	"strings"
 	"time"
-
-	"cpdiff/cmp"
-	"cpdiff/util"
 
 	"github.com/fatih/color"
 )
 
 const (
-	separator    = "\t\t"
-	defaultError = "0.0001"
+	separator = "\t\t"
 )
 
 func shouldSkipLine(line string, opts options) bool {
@@ -193,7 +190,7 @@ type fullResult struct {
 	correct        int
 	approx         int
 	hasRealNumbers bool
-	maxErr         *big.Float
+	maxErr         *big.Decimal
 }
 
 func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
@@ -213,7 +210,7 @@ func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
 		correct:        correct,
 		approx:         approx,
 		hasRealNumbers: v.hasRealNumbers || entry.HasRealNumbers,
-		maxErr:         util.BigMax(v.maxErr, entry.MaxErr),
+		maxErr:         big.BigDecimalMax(v.maxErr, entry.MaxErr),
 	}
 }
 
@@ -223,7 +220,7 @@ func newFullResult() fullResult {
 		correct:        0,
 		approx:         0,
 		hasRealNumbers: false,
-		maxErr:         big.NewFloat(0),
+		maxErr:         big.Zero(),
 	}
 }
 
@@ -238,7 +235,8 @@ func getBothFiles(args []string) ([]*os.File, error) {
 		files[0] = os.Stdin
 		files[1], err[0] = os.Open(args[0])
 	} else {
-		return nil, fmt.Errorf("Specify 1 or 2 files (%d arguments were used)", len(args))
+		errMsg := "Specify 1 or 2 files (%d arguments were used)"
+		return nil, fmt.Errorf(errMsg, len(args))
 	}
 
 	for _, e := range err {

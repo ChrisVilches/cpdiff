@@ -3,6 +3,7 @@ module cpdiff
 go 1.23.2
 
 require (
+	github.com/ericlagergren/decimal v0.0.0-20240411145413-00de7ca16731
 	github.com/fatih/color v1.17.0
 	github.com/google/go-cmp v0.6.0
 	github.com/urfave/cli/v2 v2.27.5

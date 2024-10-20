@@ -1,14 +1,12 @@
 package cmp
 
 import (
+	"cpdiff/big"
 	"fmt"
-	"math/big"
-
-	"cpdiff/util"
 )
 
 type NumArray struct {
-	nums    []*big.Float
+	nums    []*big.Decimal
 	rawData string
 }
 
@@ -38,38 +36,48 @@ func (n NumArray) ShortDisplay() string {
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
 }
 
+// TODO: A more fancy way to do this is to return
+// an iterator that simply yields each
+// individual value, and then on the caller use some functional
+// programming function that groups
+// the iterator values and returns ranges for each group with
+// different result value.
+// But I'm not sure if this would be possible since I still need to know
+// the global comp value
+// and the max error beforehand, before having to iterate the groups
+// So perhaps it wouldn't be possible.
 func compareNums(
 	first,
 	second NumArray,
-	allowedError *big.Float,
+	allowedError *big.Decimal,
 	useRelativeErr bool,
-) ([]cmpRange, *big.Float) {
+) ([]cmpRange, *big.Decimal) {
 	n := len(first.nums)
 	m := len(second.nums)
 	size := min(n, m)
 	res := []cmpRange{}
-	maxErr := big.NewFloat(0)
+	maxErr := big.Zero()
 
 	for i := 0; i < size; i++ {
 		var v ComparisonResult
 		a := first.nums[i]
 		b := second.nums[i]
 
-		if a.Cmp(b) == 0 {
+		if a.ExactEq(b) {
 			v = CmpRes.Correct
 		} else {
-			var err *big.Float
+			approx := false
+			var err *big.Decimal
 
 			if useRelativeErr {
-				err = util.RelError(a, b)
+				approx, err = a.ApproxEqRelError(b, allowedError)
 			} else {
-				err = util.AbsError(a, b)
+				approx, err = a.ApproxEqAbsError(b, allowedError)
 			}
 
-			if err.Cmp(allowedError) == -1 {
+			if approx {
 				v = CmpRes.Approx
-
-				maxErr.Set(util.BigMax(maxErr, err))
+				maxErr = big.BigDecimalMax(maxErr, err)
 			} else {
 				v = CmpRes.Incorrect
 			}

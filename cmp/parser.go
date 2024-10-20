@@ -1,13 +1,13 @@
 package cmp
 
 import (
-	"math/big"
+	"cpdiff/big"
 	"strings"
 )
 
-func toNumArray(s string) ([]*big.Float, bool) {
+func toNumArray(s string) ([]*big.Decimal, bool) {
 	parts := strings.Fields(s)
-	res := []*big.Float{}
+	res := []*big.Decimal{}
 
 	if len(parts) == 0 {
 		return nil, false
@@ -18,13 +18,13 @@ func toNumArray(s string) ([]*big.Float, bool) {
 			return nil, false
 		}
 
-		num := new(big.Float)
+		val, ok := big.NewFromString(part)
 
-		if _, ok := num.SetString(part); !ok {
+		if !ok {
 			return nil, false
 		}
 
-		res = append(res, num)
+		res = append(res, val)
 	}
 
 	return res, true

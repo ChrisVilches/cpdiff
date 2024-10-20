@@ -7,9 +7,9 @@ import (
 	"github.com/fatih/color"
 )
 
-func warn(msg string) {
+func warn(w error) {
 	fmt.Fprint(os.Stderr, "Warning: ")
-	fmt.Fprintln(os.Stderr, msg)
+	fmt.Fprintln(os.Stderr, w)
 }
 
 func printfColor(c color.Attribute, useColor bool, s string, printArgs ...any) {

@@ -1,7 +1,10 @@
 package cmp
 
 import (
-	"math/big"
+	"cpdiff/big"
+	"fmt"
+	"math/rand"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -41,8 +44,6 @@ func TestNumArrayShortDisplay(t *testing.T) {
 	}
 }
 
-const defaultError = 0.0001
-
 func TestCompareNums(t *testing.T) {
 	data := [][]string{
 		{"1 2 3", "1 2 3"},
@@ -55,7 +56,7 @@ func TestCompareNums(t *testing.T) {
 		{"1", "1.001"},
 	}
 
-	err := big.NewFloat(defaultError)
+	err := big.NewFromStringUnsafe("0.0001")
 
 	ans := [][]cmpRange{
 		{{From: 0, To: 3, Result: CmpRes.Correct}},
@@ -82,10 +83,55 @@ func TestCompareNums(t *testing.T) {
 	}
 }
 
-func strToBigFloat(s string) *big.Float {
-	val, _ := new(big.Float).SetString(s)
+func randFloat(size int, withDecimal bool) []rune {
+	digits := []rune{'1', '2', '3', '4', '5', '6', '7', '8', '9'}
+	num := []rune{}
 
-	return val
+	for i := 0; i < size; i++ {
+		if withDecimal && i == size/2 {
+			num = append(num, '.')
+		}
+
+		idx := rand.Int() % len(digits)
+		num = append(num, digits[idx])
+	}
+
+	return num
+}
+
+func TestCompareNumsHuge(t *testing.T) {
+	size := 200000
+	useDecimal := []bool{false, false, true, true, true}
+	zeroPos := []int{-1, 5_000, -1, 198_999, 50000}
+	res := []ComparisonResult{CmpRes.Correct, CmpRes.Incorrect, CmpRes.Correct, CmpRes.Approx, CmpRes.Incorrect}
+	err := big.NewFromStringUnsafe("0.0001")
+
+	for testCase := range useDecimal {
+		num1 := randFloat(size, useDecimal[testCase])
+		num2 := slices.Clone(num1)
+
+		if zeroPos[testCase] != -1 {
+			num2[zeroPos[testCase]] = '0'
+		}
+
+		numArray1 := newComparable(string(num1)).(NumArray)
+		numArray2 := newComparable(string(num2)).(NumArray)
+
+		ranges, _ := compareNums(numArray1, numArray2, err, false)
+
+		if len(ranges) != 1 {
+			t.Fatalf("expected num array comparison to have only one range (but got %d)", len(ranges))
+		}
+
+		expected := res[testCase]
+		actual := ranges[0].Result
+
+		if expected != actual {
+			fmt.Println(numArray1.rawData)
+			fmt.Println(numArray2.rawData)
+			t.Fatalf("(test case %d) expected number comparison to be %d (but got %d)", testCase, expected, actual)
+		}
+	}
 }
 
 func TestCompareNumsMaxErr(t *testing.T) {
@@ -97,14 +143,14 @@ func TestCompareNumsMaxErr(t *testing.T) {
 		{"0", "0.00000001"},
 	}
 
-	err := big.NewFloat(defaultError)
+	err := big.NewFromStringUnsafe("0.0001")
 
-	ans := []*big.Float{
-		strToBigFloat("0"),
-		strToBigFloat("0.00006"),
-		strToBigFloat("0.00001"),
-		strToBigFloat("0"),
-		strToBigFloat("0.00000001"),
+	ans := []*big.Decimal{
+		big.NewFromStringUnsafe("0"),
+		big.NewFromStringUnsafe("0.00006"),
+		big.NewFromStringUnsafe("0.00001"),
+		big.NewFromStringUnsafe("0"),
+		big.NewFromStringUnsafe("0.00000001"),
 	}
 
 	for i, testCase := range data {
@@ -114,7 +160,7 @@ func TestCompareNumsMaxErr(t *testing.T) {
 
 		_, res := compareNums(s1, s2, err, false)
 
-		if res.String() != expected.String() {
+		if !res.ExactEq(expected) {
 			t.Fatalf("expected error to be %s but got %s", expected.String(), res.String())
 		}
 	}
