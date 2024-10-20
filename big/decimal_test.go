@@ -4,7 +4,43 @@ import (
 	"testing"
 )
 
-func TestBigMax(t *testing.T) {
+func TestInsideRange(t *testing.T) {
+	dataInside := [][]float64{
+		{1, 0, 2},
+		{0, 0, 2},
+		{2, 0, 2},
+		{1.5, 0, 2},
+	}
+
+	dataOutside := [][]float64{
+		{-0.000001, 0, 2},
+		{2.000001, 0, 2},
+		{5, 0, 2},
+		{-3.5, 0, 2},
+	}
+
+	for _, testCase := range dataInside {
+		num := NewFromFloat64(testCase[0])
+		u := testCase[1]
+		v := testCase[2]
+
+		if !num.InsideRange(u, v) {
+			t.Fatalf("expected %s to be inside range [%f, %f]", num.String(), u, v)
+		}
+	}
+
+	for _, testCase := range dataOutside {
+		num := NewFromFloat64(testCase[0])
+		u := testCase[1]
+		v := testCase[2]
+
+		if num.InsideRange(u, v) {
+			t.Fatalf("expected %s to be outside range [%f, %f]", num.String(), u, v)
+		}
+	}
+}
+
+func TestMax(t *testing.T) {
 	data := [][]float64{
 		{1, 2, 2},
 		{7.55, 4.1212, 7.55},
@@ -17,18 +53,18 @@ func TestBigMax(t *testing.T) {
 		b := NewFromFloat64(testCase[1])
 		c := NewFromFloat64(testCase[2])
 
-		if !BigDecimalMax(a, b).ExactEq(c) {
-			t.Fatalf("BigMax(%s, %s) expected to be %s", a.String(), b.String(), c.String())
+		if !Max(a, b).ExactEq(c) {
+			t.Fatalf("max function (%s, %s) expected to be %s", a.String(), b.String(), c.String())
 		}
 	}
 
-	if BigDecimalMax(NewFromFloat64(5), nil).String() != "5" {
+	if Max(NewFromFloat64(5), Decimal{}).String() != "5" {
 		t.Fatalf("expected to return the non-nil value")
 	}
-	if BigDecimalMax(nil, NewFromFloat64(7)).String() != "7" {
+	if Max(Decimal{}, NewFromFloat64(7)).String() != "7" {
 		t.Fatalf("expected to return the non-nil value")
 	}
-	if BigDecimalMax(nil, nil) != nil {
+	if !Max(Decimal{}, Decimal{}).isNil() {
 		t.Fatalf("expected to return nil")
 	}
 }
@@ -48,7 +84,6 @@ func TestAbsError(t *testing.T) {
 		c := NewFromStringUnsafe(testCase[2])
 		res := absError(a, b)
 
-		// TODO: I think this one is wrong, because it won't be == exactly. Or would it????
 		if !res.ExactEq(c) {
 			t.Fatalf("expected error to be %s but got %s", c.String(), res.String())
 		}

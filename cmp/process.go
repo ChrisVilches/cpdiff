@@ -10,15 +10,15 @@ type ComparisonEntry struct {
 	CmpRes         ComparisonResult
 	CmpRanges      []cmpRange
 	HasRealNumbers bool
-	MaxErr         *big.Decimal
+	MaxErr         big.Decimal
 }
 
 func handleNumArrays(
 	lhs,
 	rhs NumArray,
 	relativeErr bool,
-	allowedError *big.Decimal,
-) ([]cmpRange, *big.Decimal, bool) {
+	allowedError big.Decimal,
+) ([]cmpRange, big.Decimal, bool) {
 	cmpRanges, diff := compareNums(lhs, rhs, allowedError, relativeErr)
 
 	return cmpRanges, diff, lhs.HasRealNumbers() || rhs.HasRealNumbers()
@@ -47,7 +47,7 @@ func findGlobalResult(cmpRanges []cmpRange) ComparisonResult {
 func newComparisonEntry(
 	lhs, rhs Comparable,
 	useRelativeErr bool,
-	allowedError *big.Decimal,
+	allowedError big.Decimal,
 ) ComparisonEntry {
 	e := ComparisonEntry{LHS: lhs, RHS: rhs}
 
@@ -81,7 +81,7 @@ func newComparisonEntry(
 func Process(
 	lhsCh,
 	rhsCh chan string,
-	allowedError *big.Decimal,
+	allowedError big.Decimal,
 	useRelativeErr bool,
 	useNumbers bool,
 	entriesCh chan ComparisonEntry,

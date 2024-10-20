@@ -145,7 +145,7 @@ func TestCompareNumsMaxErr(t *testing.T) {
 
 	err := big.NewFromStringUnsafe("0.0001")
 
-	ans := []*big.Decimal{
+	ans := []big.Decimal{
 		big.NewFromStringUnsafe("0"),
 		big.NewFromStringUnsafe("0.00006"),
 		big.NewFromStringUnsafe("0.00001"),

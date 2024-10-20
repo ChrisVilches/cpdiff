@@ -6,7 +6,7 @@ import (
 )
 
 type NumArray struct {
-	nums    []*big.Decimal
+	nums    []big.Decimal
 	rawData string
 }
 
@@ -36,22 +36,12 @@ func (n NumArray) ShortDisplay() string {
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
 }
 
-// TODO: A more fancy way to do this is to return
-// an iterator that simply yields each
-// individual value, and then on the caller use some functional
-// programming function that groups
-// the iterator values and returns ranges for each group with
-// different result value.
-// But I'm not sure if this would be possible since I still need to know
-// the global comp value
-// and the max error beforehand, before having to iterate the groups
-// So perhaps it wouldn't be possible.
 func compareNums(
 	first,
 	second NumArray,
-	allowedError *big.Decimal,
+	allowedError big.Decimal,
 	useRelativeErr bool,
-) ([]cmpRange, *big.Decimal) {
+) ([]cmpRange, big.Decimal) {
 	n := len(first.nums)
 	m := len(second.nums)
 	size := min(n, m)
@@ -67,7 +57,7 @@ func compareNums(
 			v = CmpRes.Correct
 		} else {
 			approx := false
-			var err *big.Decimal
+			var err big.Decimal
 
 			if useRelativeErr {
 				approx, err = a.ApproxEqRelError(b, allowedError)
@@ -77,7 +67,7 @@ func compareNums(
 
 			if approx {
 				v = CmpRes.Approx
-				maxErr = big.BigDecimalMax(maxErr, err)
+				maxErr = big.Max(maxErr, err)
 			} else {
 				v = CmpRes.Incorrect
 			}

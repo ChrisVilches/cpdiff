@@ -17,10 +17,10 @@ type options struct {
 	showOnlyWrong    bool
 	trim             bool
 	numbers          bool
-	error            *big.Decimal
+	error            big.Decimal
 }
 
-func getConfigError(errorString string) (*big.Decimal, error) {
+func getConfigError(errorString string) (big.Decimal, error) {
 	res := big.NewFromStringUnsafe(defaultError)
 
 	if len(errorString) == 0 {
@@ -29,9 +29,7 @@ func getConfigError(errorString string) (*big.Decimal, error) {
 
 	parsedVal, ok := big.NewFromString(errorString)
 
-	// TODO: I think the reason I was using <= in the Cmp is because
-	// I don't want it to be 0 or 1, but let'S just allow it?????
-	if !ok || parsedVal.OutsideRange(0, 1) {
+	if !ok || !parsedVal.InsideRange(0, 1) {
 		warn := fmt.Errorf(
 			"error value is incorrect (using default value %s)",
 			defaultError,

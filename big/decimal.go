@@ -5,17 +5,12 @@ import (
 	"math/big"
 )
 
-// TODO: Since I'm now using a pointer inside the main struct, I don't need to
-// pass around pointers. It's okay to copy the Decimal struct
-// since all it contains
-// is a pointer (which is copied, but the content not cloned).
-
 type Decimal struct {
 	inner *decimal.Big
 }
 
-func Zero() *Decimal {
-	return &Decimal{inner: new(decimal.Big).SetFloat64(0)}
+func Zero() Decimal {
+	return Decimal{inner: new(decimal.Big).SetFloat64(0)}
 }
 
 func isDecimalRepresentationCorrect(s string) bool {
@@ -24,29 +19,29 @@ func isDecimalRepresentationCorrect(s string) bool {
 	return ok
 }
 
-func (a *Decimal) String() string {
+func (a Decimal) String() string {
 	return a.inner.String()
 }
 
-func NewFromString(s string) (*Decimal, bool) {
+func NewFromString(s string) (Decimal, bool) {
 	if !isDecimalRepresentationCorrect(s) {
-		return nil, false
+		return Decimal{inner: nil}, false
 	}
 
 	val, ok := new(decimal.Big).SetString(s)
 
 	if !ok {
-		return nil, false
+		return Decimal{inner: nil}, false
 	}
 
-	return &Decimal{inner: val}, true
+	return Decimal{inner: val}, true
 }
 
-func NewFromFloat64(f float64) *Decimal {
-	return &Decimal{inner: new(decimal.Big).SetFloat64(f)}
+func NewFromFloat64(f float64) Decimal {
+	return Decimal{inner: new(decimal.Big).SetFloat64(f)}
 }
 
-func NewFromStringUnsafe(s string) *Decimal {
+func NewFromStringUnsafe(s string) Decimal {
 	val, ok := NewFromString(s)
 
 	if !ok {
@@ -60,36 +55,37 @@ func (a Decimal) IsInt() bool {
 	return a.inner.IsInt()
 }
 
-func (a Decimal) ExactEq(b *Decimal) bool {
+func (a Decimal) isNil() bool {
+	return a.inner == nil
+}
+
+func (a Decimal) ExactEq(b Decimal) bool {
 	return a.inner.Cmp(b.inner) == 0
 }
 
-func (a Decimal) ApproxEqAbsError(b *Decimal, err *Decimal) (bool, *Decimal) {
-	diff := absError(&a, b)
+func (a Decimal) ApproxEqAbsError(b Decimal, err Decimal) (bool, Decimal) {
+	diff := absError(a, b)
 	return diff.inner.Cmp(err.inner) <= 0, diff
 }
 
-func (a Decimal) ApproxEqRelError(b *Decimal, err *Decimal) (bool, *Decimal) {
-	diff := relError(&a, b)
+func (a Decimal) ApproxEqRelError(b Decimal, err Decimal) (bool, Decimal) {
+	diff := relError(a, b)
 	return diff.inner.Cmp(err.inner) <= 0, diff
 }
 
-func (a Decimal) OutsideRange(lo, hi float64) bool {
-	// TODO: Should be < instead of <=
-	// I changed it, but check again where is this used.
+func (a Decimal) InsideRange(lo, hi float64) bool {
 	bad1 := a.inner.Cmp(NewFromFloat64(lo).inner) < 0
 	bad2 := a.inner.Cmp(NewFromFloat64(hi).inner) > 0
 
-	return bad1 || bad2
+	return !(bad1 || bad2)
 }
 
-// TODO: be careful when refactoring this function (to remove pointers)
-func BigDecimalMax(a, b *Decimal) *Decimal {
-	if a == nil {
+func Max(a, b Decimal) Decimal {
+	if a.inner == nil {
 		return b
 	}
 
-	if b == nil {
+	if b.inner == nil {
 		return a
 	}
 
@@ -100,13 +96,13 @@ func BigDecimalMax(a, b *Decimal) *Decimal {
 	return b
 }
 
-func absError(a, b *Decimal) *Decimal {
+func absError(a, b Decimal) Decimal {
 	r := Zero()
 	r.inner.Abs(r.inner.Sub(a.inner, b.inner))
 	return r
 }
 
-func relError(a, b *Decimal) *Decimal {
+func relError(a, b Decimal) Decimal {
 	r := Zero()
 
 	if b.ExactEq(r) {

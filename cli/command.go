@@ -190,7 +190,7 @@ type fullResult struct {
 	correct        int
 	approx         int
 	hasRealNumbers bool
-	maxErr         *big.Decimal
+	maxErr         big.Decimal
 }
 
 func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
@@ -210,7 +210,7 @@ func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
 		correct:        correct,
 		approx:         approx,
 		hasRealNumbers: v.hasRealNumbers || entry.HasRealNumbers,
-		maxErr:         big.BigDecimalMax(v.maxErr, entry.MaxErr),
+		maxErr:         big.Max(v.maxErr, entry.MaxErr),
 	}
 }
 

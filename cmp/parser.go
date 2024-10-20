@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-func toNumArray(s string) ([]*big.Decimal, bool) {
+func toNumArray(s string) ([]big.Decimal, bool) {
 	parts := strings.Fields(s)
-	res := []*big.Decimal{}
+	res := []big.Decimal{}
 
 	if len(parts) == 0 {
 		return nil, false
