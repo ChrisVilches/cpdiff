@@ -3,12 +3,13 @@ package cli
 import (
 	"cpdiff/cmp"
 	"cpdiff/util"
+	"strings"
 
 	"github.com/fatih/color"
 )
 
-func colorSubstrings(s string, entry cmp.ComparisonEntry) string {
-	res := ""
+func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
+	res := strings.Builder{}
 
 	for _, elem := range entry.CmpRanges {
 		from := elem.From
@@ -19,14 +20,18 @@ func colorSubstrings(s string, entry cmp.ComparisonEntry) string {
 		}
 
 		c := resultColor(elem.Result)
-		res += color.New(c).Sprint(s[from:to])
+		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))
+
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return res
+	return res.String(), nil
 }
 
-func colorFields(s string, entry cmp.ComparisonEntry) string {
-	res := ""
+func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
+	res := strings.Builder{}
 	prev := 0
 	j := 0
 
@@ -37,14 +42,18 @@ func colorFields(s string, entry cmp.ComparisonEntry) string {
 
 		c := resultColor(entry.CmpRanges[j].Result)
 
-		res += color.New(c).Sprint(s[prev:i])
+		_, err := res.WriteString(color.New(c).Sprint(s[prev:i]))
+
+		if err != nil {
+			return "", err
+		}
 
 		prev = i
 	}
 
-	return res
+	return res.String(), nil
 }
 
-func colorAll(s string, entry cmp.ComparisonEntry) string {
-	return color.New(resultColor(entry.CmpRes)).Sprint(s)
+func colorAll(s string, entry cmp.ComparisonEntry) (string, error) {
+	return color.New(resultColor(entry.CmpRes)).Sprint(s), nil
 }

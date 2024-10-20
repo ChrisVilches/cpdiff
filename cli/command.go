@@ -52,7 +52,7 @@ func resultIcon(res cmp.ComparisonResult) string {
 func getColorFn(
 	entry cmp.ComparisonEntry,
 	short bool,
-) func(s string, entry cmp.ComparisonEntry) string {
+) func(s string, entry cmp.ComparisonEntry) (string, error) {
 	if short || entry.LHS.Type() != entry.RHS.Type() {
 		return colorAll
 	}
@@ -69,9 +69,9 @@ func getColorFn(
 func showComparisonLine(
 	entry cmp.ComparisonEntry,
 	opts options, line int,
-) bool {
+) (bool, error) {
 	if opts.showOnlyWrong && entry.CmpRes != cmp.CmpRes.Incorrect {
-		return false
+		return false, nil
 	}
 
 	pre := ""
@@ -95,15 +95,26 @@ func showComparisonLine(
 
 	if opts.showColor {
 		applyColor := getColorFn(entry, opts.short)
+		var err error
 
-		lhsText = applyColor(lhsText, entry)
-		rhsText = applyColor(rhsText, entry)
+		lhsText, err = applyColor(lhsText, entry)
+
+		if err != nil {
+			return false, err
+		}
+
+		rhsText, err = applyColor(rhsText, entry)
+
+		if err != nil {
+			return false, err
+		}
+
 		iconStr = color.New(resultColor(entry.CmpRes)).Sprint(iconStr)
 	}
 
 	fmt.Printf("%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
 
-	return true
+	return true, nil
 }
 
 func showFullResult(
@@ -275,7 +286,13 @@ func mainCommand(opts options, args []string) error {
 	for entry := range entries {
 		fullResult = fullResult.putEntry(entry)
 
-		if showComparisonLine(entry, opts, fullResult.totalLines) {
+		shown, err := showComparisonLine(entry, opts, fullResult.totalLines)
+
+		if err != nil {
+			return err
+		}
+
+		if shown {
 			printedLines = true
 		}
 
