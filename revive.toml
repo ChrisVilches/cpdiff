@@ -18,7 +18,7 @@ enableAllRules = true
   Arguments = [10]
 
 [rule.unhandled-error]
-  arguments = ["fmt.Print", "fmt.Fprint", "fmt.Fprintln", "fmt.Printf", "fmt.Println"]
+  arguments = ["fmt.Print", "fmt.Fprint", "fmt.Fprintln", "fmt.Printf", "fmt.Println", "fmt.Fprintf"]
 
 [rule.flag-parameter]
   Disabled = true

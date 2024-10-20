@@ -15,7 +15,7 @@ func TestHasRealNumbers(t *testing.T) {
 		input := testCase
 		expected := ans[i]
 
-		s := LineToComparable(input).(NumArray)
+		s := newComparable(input).(NumArray)
 		res := s.HasRealNumbers()
 
 		if res != expected {
@@ -32,7 +32,7 @@ func TestNumArrayShortDisplay(t *testing.T) {
 		input := testCase
 		expected := ans[i]
 
-		s := LineToComparable(input).(NumArray)
+		s := newComparable(input).(NumArray)
 		res := s.ShortDisplay()
 
 		if res != expected {
@@ -69,8 +69,8 @@ func TestCompareNums(t *testing.T) {
 	}
 
 	for i, testCase := range data {
-		s1 := LineToComparable(testCase[0]).(NumArray)
-		s2 := LineToComparable(testCase[1]).(NumArray)
+		s1 := newComparable(testCase[0]).(NumArray)
+		s2 := newComparable(testCase[1]).(NumArray)
 		expected := ans[i]
 
 		res1, _ := compareNums(s1, s2, err, false)
@@ -108,8 +108,8 @@ func TestCompareNumsMaxErr(t *testing.T) {
 	}
 
 	for i, testCase := range data {
-		s1 := LineToComparable(testCase[0]).(NumArray)
-		s2 := LineToComparable(testCase[1]).(NumArray)
+		s1 := newComparable(testCase[0]).(NumArray)
+		s2 := newComparable(testCase[1]).(NumArray)
 		expected := ans[i]
 
 		_, res := compareNums(s1, s2, err, false)

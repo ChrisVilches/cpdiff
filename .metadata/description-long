@@ -1,0 +1,5 @@
+Compare two files line by line. If only one file is specified, the other
+input will be standard input (stdin).
+
+It has features such as coloring output, using big float logic to determine whether two
+numbers are similar, etc.

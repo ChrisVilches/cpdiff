@@ -1,18 +1,27 @@
 package cli
 
 import (
-	"github.com/urfave/cli/v2"
+	"fmt"
 	"os"
+
+	"github.com/urfave/cli/v2"
 )
 
-func App() error {
+func App(packageName, description, descriptionLong, version string) error {
 	app := &cli.App{
-		Name: "cpdiff",
-		// TODO: Version should be dynamic
-		Version:                "2.0.2",
-		Usage:                  "File difference tool for competitive programming",
+		Name:                   packageName,
+		Version:                version,
+		Usage:                  description,
+		UsageText:              fmt.Sprintf("%s [global options] files", packageName),
+		Description:            descriptionLong,
 		UseShortOptionHandling: true,
 		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "numbers",
+				Aliases: []string{"n"},
+				Value:   true,
+				Usage:   "Treat a line with one or multiple numbers as a number array, and use big float logic for comparison",
+			},
 			&cli.BoolFlag{
 				Name:    "ignore-empty",
 				Aliases: []string{"i"},
@@ -32,10 +41,10 @@ func App() error {
 				Usage:   "Ignore correct lines and show only wrong ones",
 			},
 			&cli.BoolFlag{
-				Name:    "abort",
-				Aliases: []string{"a"},
+				Name:    "exit",
+				Aliases: []string{"x"},
 				Value:   false,
-				Usage:   "Abort when it finds the first incorrect answer",
+				Usage:   "Exit early when it finds the first incorrect answer",
 			},
 			&cli.BoolFlag{
 				Name:    "linenum",

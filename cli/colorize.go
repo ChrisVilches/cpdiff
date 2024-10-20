@@ -3,21 +3,20 @@ package cli
 import (
 	"cpdiff/cmp"
 	"cpdiff/util"
+	"slices"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
+// TODO: test these two-pointer methods.
+// TODO: I think the min() does something weird (specially to the last part of the string)
 func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 	res := strings.Builder{}
 
 	for _, elem := range entry.CmpRanges {
 		from := elem.From
 		to := min(elem.To, len(s))
-
-		if from > to {
-			break
-		}
 
 		c := resultColor(elem.Result)
 		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))
@@ -31,24 +30,23 @@ func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 }
 
 func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
+	pos := slices.Collect(util.StringFieldsKeepWhitespace(s))
 	res := strings.Builder{}
 	prev := 0
-	j := 0
 
-	for idx, i := range util.StringFieldsKeepWhitespace(s) {
-		for entry.CmpRanges[j].To <= idx {
-			j++
-		}
+	for _, elem := range entry.CmpRanges {
+		lastPos := pos[min(elem.To, len(pos))-1]
+		from := prev
+		to := min(lastPos, len(s))
 
-		c := resultColor(entry.CmpRanges[j].Result)
-
-		_, err := res.WriteString(color.New(c).Sprint(s[prev:i]))
+		c := resultColor(elem.Result)
+		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))
 
 		if err != nil {
 			return "", err
 		}
 
-		prev = i
+		prev = to
 	}
 
 	return res.String(), nil

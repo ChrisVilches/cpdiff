@@ -1,7 +1,7 @@
 package util
 
-func StringFieldsKeepWhitespace(s string) func(func(int, int) bool) {
-	return func(yield func(int, int) bool) {
+func StringFieldsKeepWhitespace(s string) func(func(int) bool) {
+	return func(yield func(int) bool) {
 		state := 0
 
 		idx := 0
@@ -18,7 +18,7 @@ func StringFieldsKeepWhitespace(s string) func(func(int, int) bool) {
 				}
 			case 2:
 				if c != ' ' {
-					if !yield(idx, i) {
+					if !yield(i) {
 						return
 					}
 
@@ -29,7 +29,7 @@ func StringFieldsKeepWhitespace(s string) func(func(int, int) bool) {
 		}
 
 		if state != 0 {
-			yield(idx, len(s))
+			yield(len(s))
 		}
 	}
 }

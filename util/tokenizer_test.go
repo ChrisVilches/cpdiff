@@ -22,17 +22,10 @@ func TestStringFieldsKeepWhitespace(t *testing.T) {
 		expected := testCase[1]
 		res := ""
 		prev := 0
-		prevIdx := -1
 
-		for idx, i := range StringFieldsKeepWhitespace(in) {
+		for i := range StringFieldsKeepWhitespace(in) {
 			res += fmt.Sprintf("[%s]", in[prev:i])
 			prev = i
-
-			if prevIdx+1 != idx {
-				t.Fatalf("expected index to be increasing")
-			}
-
-			prevIdx = idx
 		}
 
 		if res != expected {

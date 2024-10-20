@@ -20,6 +20,7 @@ type options struct {
 	abortEarly       bool
 	showOnlyWrong    bool
 	trim             bool
+	numbers          bool
 	error            *big.Float
 }
 
@@ -62,9 +63,10 @@ func newOptions(ctx *cli.Context) options {
 		showDuration:     ctx.Bool("duration"),
 		showLineNum:      ctx.Bool("linenum"),
 		useRelativeError: ctx.Bool("relative"),
-		abortEarly:       ctx.Bool("abort"),
+		abortEarly:       ctx.Bool("exit"),
 		showOnlyWrong:    ctx.Bool("wrong"),
 		skipEmptyLines:   ctx.Bool("ignore-empty"),
+		numbers:          ctx.Bool("numbers"),
 		error:            err,
 	}
 

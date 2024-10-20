@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -228,7 +227,7 @@ func newFullResult() fullResult {
 	}
 }
 
-func getBothStreams(args []string) ([]*os.File, error) {
+func getBothFiles(args []string) ([]*os.File, error) {
 	files := make([]*os.File, 2)
 	err := make([]error, 2)
 
@@ -239,9 +238,7 @@ func getBothStreams(args []string) ([]*os.File, error) {
 		files[0] = os.Stdin
 		files[1], err[0] = os.Open(args[0])
 	} else {
-		// TODO: This error should be outputted by the CLI framework.
-		// i.e. detected by the CLI module and outputted with pretty format.
-		return nil, errors.New("Should have 1 or 2 arguments")
+		return nil, fmt.Errorf("Specify 1 or 2 files (%d arguments were used)", len(args))
 	}
 
 	for _, e := range err {
@@ -256,7 +253,7 @@ func getBothStreams(args []string) ([]*os.File, error) {
 func mainCommand(opts options, args []string) error {
 	startTime := time.Now()
 
-	files, err := getBothStreams(args)
+	files, err := getBothFiles(args)
 
 	if err != nil {
 		return err
@@ -265,8 +262,8 @@ func mainCommand(opts options, args []string) error {
 	defer files[0].Close()
 	defer files[1].Close()
 
-	input := bufio.NewScanner(files[0])
-	target := bufio.NewScanner(files[1])
+	lhs := bufio.NewScanner(files[0])
+	rhs := bufio.NewScanner(files[1])
 
 	const chSize = 100
 
@@ -276,9 +273,16 @@ func mainCommand(opts options, args []string) error {
 
 	aborted := false
 
-	go readLinesToChannel(input, lhsCh, opts)
-	go readLinesToChannel(target, rhsCh, opts)
-	go cmp.Process(lhsCh, rhsCh, opts.error, opts.useRelativeError, entries)
+	go readLinesToChannel(lhs, lhsCh, opts)
+	go readLinesToChannel(rhs, rhsCh, opts)
+	go cmp.Process(
+		lhsCh,
+		rhsCh,
+		opts.error,
+		opts.useRelativeError,
+		opts.numbers,
+		entries,
+	)
 
 	fullResult := newFullResult()
 	printedLines := false
@@ -302,11 +306,11 @@ func mainCommand(opts options, args []string) error {
 		}
 	}
 
-	if err := input.Err(); err != nil {
+	if err := lhs.Err(); err != nil {
 		return err
 	}
 
-	if err := target.Err(); err != nil {
+	if err := rhs.Err(); err != nil {
 		return err
 	}
 

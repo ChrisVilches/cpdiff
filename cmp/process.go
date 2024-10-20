@@ -83,6 +83,7 @@ func Process(
 	rhsCh chan string,
 	allowedError *big.Float,
 	useRelativeErr bool,
+	useNumbers bool,
 	entriesCh chan ComparisonEntry,
 ) {
 	for {
@@ -93,8 +94,15 @@ func Process(
 			break
 		}
 
-		lhs := LineToComparable(line1)
-		rhs := LineToComparable(line2)
+		var lhs, rhs Comparable
+
+		if useNumbers {
+			lhs = newComparable(line1)
+			rhs = newComparable(line2)
+		} else {
+			lhs = newComparableNonNumeric(line1)
+			rhs = newComparableNonNumeric(line2)
+		}
 
 		entriesCh <- newComparisonEntry(lhs, rhs, useRelativeErr, allowedError)
 	}
