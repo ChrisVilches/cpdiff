@@ -12,7 +12,8 @@ import (
 
 func expectLineCount(t *testing.T, lines []string, count int) {
 	if len(lines) != count {
-		t.Fatalf("expected output to have %d lines, but has %d", count, len(lines))
+		msg := "expected output to have %d lines, but has %d"
+		t.Fatalf(msg, count, len(lines))
 	}
 }
 

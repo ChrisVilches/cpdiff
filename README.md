@@ -18,8 +18,15 @@ yay -S cpdiff
 
 ## Development
 
+Linting
+
 ```sh
-go test ./...
 revive --formatter stylish ./...
 ```
 
+For unit and integration tests, build the project, then set its path to the environment variable:
+
+```sh
+go build
+INTEGRATION_TEST_EXECUTABLE=/path/cpdiff go test ./...
+```

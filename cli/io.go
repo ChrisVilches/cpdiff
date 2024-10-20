@@ -12,12 +12,12 @@ func warn(w error) {
 	fmt.Fprintln(os.Stderr, w)
 }
 
-func printfLnColor(c color.Attribute, useColor bool, s string, printArgs ...any) {
+func printfLnColor(c color.Attribute, useColor bool, s string, args ...any) {
 	if !useColor {
-		fmt.Println(fmt.Sprintf(s, printArgs...))
+		fmt.Println(fmt.Sprintf(s, args...))
 
 		return
 	}
 
-	fmt.Println(color.New(c).Sprintf(s, printArgs...))
+	fmt.Println(color.New(c).Sprintf(s, args...))
 }
