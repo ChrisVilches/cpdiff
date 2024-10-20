@@ -57,16 +57,6 @@ func TestMax(t *testing.T) {
 			t.Fatalf("max function (%s, %s) expected to be %s", a.String(), b.String(), c.String())
 		}
 	}
-
-	if Max(NewFromFloat64(5), Decimal{}).String() != "5" {
-		t.Fatalf("expected to return the non-nil value")
-	}
-	if Max(Decimal{}, NewFromFloat64(7)).String() != "7" {
-		t.Fatalf("expected to return the non-nil value")
-	}
-	if !Max(Decimal{}, Decimal{}).isNil() {
-		t.Fatalf("expected to return nil")
-	}
 }
 
 func TestAbsError(t *testing.T) {

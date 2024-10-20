@@ -46,7 +46,7 @@ func compareNums(
 	m := len(second.nums)
 	size := min(n, m)
 	res := []cmpRange{}
-	maxErr := big.Zero()
+	maxErr := big.NewZero()
 
 	for i := 0; i < size; i++ {
 		var v ComparisonResult

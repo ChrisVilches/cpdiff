@@ -222,7 +222,7 @@ func newFullResult() fullResult {
 		correct:        0,
 		approx:         0,
 		hasRealNumbers: false,
-		maxErr:         big.Zero(),
+		maxErr:         big.NewZero(),
 	}
 }
 

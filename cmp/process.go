@@ -13,17 +13,6 @@ type ComparisonEntry struct {
 	MaxErr         big.Decimal
 }
 
-func handleNumArrays(
-	lhs,
-	rhs NumArray,
-	relativeErr bool,
-	allowedError big.Decimal,
-) ([]cmpRange, big.Decimal, bool) {
-	cmpRanges, diff := compareNums(lhs, rhs, allowedError, relativeErr)
-
-	return cmpRanges, diff, lhs.HasRealNumbers() || rhs.HasRealNumbers()
-}
-
 func findGlobalResult(cmpRanges []cmpRange) ComparisonResult {
 	approx := false
 
@@ -49,7 +38,7 @@ func newComparisonEntry(
 	useRelativeErr bool,
 	allowedError big.Decimal,
 ) ComparisonEntry {
-	e := ComparisonEntry{LHS: lhs, RHS: rhs}
+	e := ComparisonEntry{LHS: lhs, RHS: rhs, MaxErr: big.NewZero()}
 
 	if lhs.Type() != rhs.Type() {
 		e.CmpRes = CmpRes.Incorrect
@@ -58,12 +47,15 @@ func newComparisonEntry(
 		case ComparableTypes.RawString:
 			e.CmpRanges = compareStrings(lhs.(RawString), rhs.(RawString))
 		case ComparableTypes.NumArray:
-			e.CmpRanges, e.MaxErr, e.HasRealNumbers = handleNumArrays(
+			e.CmpRanges, e.MaxErr = compareNums(
 				lhs.(NumArray),
 				rhs.(NumArray),
-				useRelativeErr,
 				allowedError,
+				useRelativeErr,
 			)
+
+			e.HasRealNumbers = lhs.(NumArray).HasRealNumbers() ||
+				rhs.(NumArray).HasRealNumbers()
 		case ComparableTypes.Empty:
 			e.CmpRes = CmpRes.Correct
 		default:
@@ -76,6 +68,32 @@ func newComparisonEntry(
 	}
 
 	return e
+}
+
+func bothNumbers(lhs, rhs Comparable) bool {
+	return lhs.Type() == ComparableTypes.NumArray &&
+		rhs.Type() == ComparableTypes.NumArray
+}
+
+func applyStringFallbackHeuristic(lhs, rhs *Comparable, line1, line2 string) {
+	// Heuristic: when one side has numbers and the other side has strings,
+	// turn both into strings.
+	// When strings are compared, each character is colored
+	// green/red depending if it matches or not.
+	// This case would get completely red simply because the
+	// types are different:
+	// 1011 (treated as number)
+	// 0011 (treated as string)
+	// In this case, the user may be trying to compare binary strings,
+	// in which case it's best to show the differences bit by bit.
+	// If both begin with a non-zero digit, then the only solution is to
+	// disable numeric conversion (CLI flag).
+	if bothNumbers(*lhs, *rhs) {
+		return
+	}
+
+	*lhs = newComparableNonNumeric(line1)
+	*rhs = newComparableNonNumeric(line2)
 }
 
 func Process(
@@ -99,6 +117,8 @@ func Process(
 		if useNumbers {
 			lhs = newComparable(line1)
 			rhs = newComparable(line2)
+
+			applyStringFallbackHeuristic(&lhs, &rhs, line1, line2)
 		} else {
 			lhs = newComparableNonNumeric(line1)
 			rhs = newComparableNonNumeric(line2)

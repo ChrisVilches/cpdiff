@@ -73,3 +73,15 @@ func TestWrongAnswerNumsColor3(t *testing.T) {
 
 	test(t, line, expected)
 }
+
+func TestStringFallbackHeuristic(t *testing.T) {
+	lines := getLines(6)
+	line := lines[0]
+
+	expected := color.RedString("0") + color.GreenString("1110001") + color.RedString("10") + color.GreenString("01010")
+	expected += "\t\t"
+	expected += color.RedString("X ")
+	expected += color.RedString("1") + color.GreenString("1110001") + color.RedString("01") + color.GreenString("01010")
+
+	test(t, line, expected)
+}

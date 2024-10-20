@@ -77,6 +77,7 @@ func getLines(testCaseNum int, flags ...string) []string {
 	bytes, err := cmd.Output()
 
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed: %s\n", flags)
 		panic(err)
 	}
 

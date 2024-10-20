@@ -9,8 +9,10 @@ type Decimal struct {
 	inner *decimal.Big
 }
 
-func Zero() Decimal {
-	return Decimal{inner: new(decimal.Big).SetFloat64(0)}
+var zero = new(decimal.Big).SetFloat64(0)
+
+func NewZero() Decimal {
+	return Decimal{inner: zero}
 }
 
 func isDecimalRepresentationCorrect(s string) bool {
@@ -45,7 +47,7 @@ func NewFromStringUnsafe(s string) Decimal {
 	val, ok := NewFromString(s)
 
 	if !ok {
-		panic("Cannot build decimal.Big")
+		panic("Cannot build number")
 	}
 
 	return val
@@ -53,10 +55,6 @@ func NewFromStringUnsafe(s string) Decimal {
 
 func (a Decimal) IsInt() bool {
 	return a.inner.IsInt()
-}
-
-func (a Decimal) isNil() bool {
-	return a.inner == nil
 }
 
 func (a Decimal) ExactEq(b Decimal) bool {
@@ -81,14 +79,6 @@ func (a Decimal) InsideRange(lo, hi float64) bool {
 }
 
 func Max(a, b Decimal) Decimal {
-	if a.inner == nil {
-		return b
-	}
-
-	if b.inner == nil {
-		return a
-	}
-
 	if a.inner.Cmp(b.inner) == 1 {
 		return a
 	}
@@ -97,13 +87,13 @@ func Max(a, b Decimal) Decimal {
 }
 
 func absError(a, b Decimal) Decimal {
-	r := Zero()
+	r := NewFromFloat64(0)
 	r.inner.Abs(r.inner.Sub(a.inner, b.inner))
 	return r
 }
 
 func relError(a, b Decimal) Decimal {
-	r := Zero()
+	r := NewFromFloat64(0)
 
 	if b.ExactEq(r) {
 		r.inner.SetInf(false)
