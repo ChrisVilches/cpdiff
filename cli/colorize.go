@@ -19,6 +19,10 @@ func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 		from := elem.From
 		to := min(elem.To, len(s))
 
+		if from >= to {
+			break
+		}
+
 		c := resultColor(elem.Result)
 		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))
 
@@ -39,6 +43,10 @@ func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
 		lastPos := pos[min(elem.To, len(pos))-1]
 		from := prev
 		to := min(lastPos, len(s))
+
+		if from >= to {
+			break
+		}
 
 		c := resultColor(elem.Result)
 		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))

@@ -12,12 +12,15 @@ func warn(w error) {
 	fmt.Fprintln(os.Stderr, w)
 }
 
+// TODO: This now prints new line on its own.
+// This is to avoid coloring the newline, which kinda fucks up the output.
+// visually it's ok but it's hard to test
 func printfColor(c color.Attribute, useColor bool, s string, printArgs ...any) {
 	if !useColor {
-		fmt.Printf(s, printArgs...)
+		fmt.Println(fmt.Sprintf(s, printArgs...))
 
 		return
 	}
 
-	color.New(c).Printf(s, printArgs...)
+	fmt.Println(color.New(c).Sprintf(s, printArgs...))
 }
