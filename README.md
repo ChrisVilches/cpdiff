@@ -5,9 +5,7 @@
 ### From source
 
 ```sh
-git clone https://github.com/ChrisVilches/cpdiff
-cd cpdiff
-go install
+go install github.com/ChrisVilches/cpdiff@latest
 ```
 
 ### Arch Linux (AUR)
