@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"cpdiff/big"
 	"cpdiff/cmp"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -190,27 +191,33 @@ func readLinesToChannel(buf *bufio.Scanner, ch chan string, opts options) {
 type fullResult struct {
 	totalLines     int
 	correct        int
-	approx         int
 	hasRealNumbers bool
 	maxErr         big.Decimal
 }
 
-func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
-	correct := v.correct
-	approx := v.approx
+type NotAcceptedError struct {
+}
 
-	switch entry.CmpRes {
-	case cmp.CmpRes.Approx:
-		approx++
-		correct++
-	case cmp.CmpRes.Correct:
-		correct++
+func (NotAcceptedError) Error() string {
+	return "Not Accepted"
+}
+
+func (v fullResult) toError() error {
+	if v.correct == v.totalLines {
+		return nil
+	}
+
+	return NotAcceptedError{}
+}
+
+func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
+	if entry.CmpRes != cmp.CmpRes.Incorrect {
+		v.correct++
 	}
 
 	return fullResult{
 		totalLines:     v.totalLines + 1,
-		correct:        correct,
-		approx:         approx,
+		correct:        v.correct,
 		hasRealNumbers: v.hasRealNumbers || entry.HasRealNumbers,
 		maxErr:         big.Max(v.maxErr, entry.MaxErr),
 	}
@@ -220,10 +227,17 @@ func newFullResult() fullResult {
 	return fullResult{
 		totalLines:     0,
 		correct:        0,
-		approx:         0,
 		hasRealNumbers: false,
 		maxErr:         big.NewZero(),
 	}
+}
+
+func getFile(path string) (*os.File, error) {
+	if path == "-" {
+		return os.Stdin, nil
+	}
+
+	return os.Open(path)
 }
 
 func getBothFiles(args []string) ([]*os.File, error) {
@@ -231,8 +245,12 @@ func getBothFiles(args []string) ([]*os.File, error) {
 	err := make([]error, 2)
 
 	if len(args) == 2 {
-		files[0], err[0] = os.Open(args[0])
-		files[1], err[1] = os.Open(args[1])
+		if args[0] == "-" && args[1] == "-" {
+			msg := "Do not use - (standard input) for both sides"
+			return nil, errors.New(msg)
+		}
+		files[0], err[0] = getFile(args[0])
+		files[1], err[1] = getFile(args[1])
 	} else if len(args) == 1 {
 		files[0] = os.Stdin
 		files[1], err[0] = os.Open(args[0])
@@ -320,5 +338,5 @@ func mainCommand(opts options, args []string) error {
 
 	showFullResult(fullResult, aborted, startTime, time.Now(), opts)
 
-	return nil
+	return fullResult.toError()
 }

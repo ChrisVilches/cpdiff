@@ -50,7 +50,7 @@ func newOptions(ctx *cli.Context) options {
 	res := options{
 		trim:             ctx.Bool("trim"),
 		short:            ctx.Bool("short"),
-		showColor:        !ctx.Bool("no-color"),
+		showColor:        ctx.Bool("color"),
 		showDuration:     ctx.Bool("duration"),
 		showLineNum:      ctx.Bool("linenum"),
 		useRelativeError: ctx.Bool("relative"),

@@ -17,12 +17,12 @@ func TestDurationFlag(t *testing.T) {
 }
 
 func TestWrongFlag(t *testing.T) {
-	expectLineCount(t, getLines(1, "-w"), 2)
-	expectLineCount(t, getLines(1, "--wrong"), 2)
-	expectLineCount(t, getLines(1), 6)
-	expectLineCount(t, getLines(5, "-w"), 1)
-	expectLineCount(t, getLines(5, "--wrong"), 1)
-	expectLineCount(t, getLines(5), 4)
+	expectEq(t, len(getLines(1, "-w")), 2)
+	expectEq(t, len(getLines(1, "--wrong")), 2)
+	expectEq(t, len(getLines(1)), 6)
+	expectEq(t, len(getLines(5, "-w")), 1)
+	expectEq(t, len(getLines(5, "--wrong")), 1)
+	expectEq(t, len(getLines(5)), 4)
 }
 
 func TestIgnoreEmptyLinesFlag(t *testing.T) {

@@ -28,6 +28,10 @@ func main() {
 
 	err := cli.App(packageName, description, descriptionLong, version)
 
+	if _, notAccepted := err.(cli.NotAcceptedError); notAccepted {
+		os.Exit(1)
+	}
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)

@@ -100,7 +100,7 @@ func randFloat(size int, withDecimal bool) []rune {
 }
 
 func TestCompareNumsHuge(t *testing.T) {
-	size := 200000
+	size := 200_000
 	useDecimal := []bool{false, false, true, true, true}
 	zeroPos := []int{-1, 5_000, -1, 198_999, 50000}
 	res := []ComparisonResult{CmpRes.Correct, CmpRes.Incorrect, CmpRes.Correct, CmpRes.Approx, CmpRes.Incorrect}

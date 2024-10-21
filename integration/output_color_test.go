@@ -7,7 +7,7 @@ import (
 
 func TestAcceptedColor(t *testing.T) {
 	lines := getLines(1)
-	test(t, lines[0], color.GreenString("AAABBBCCC")+"\t\t"+color.GreenString("AAABBBCCC"))
+	expectEq(t, lines[0], color.GreenString("AAABBBCCC")+"\t\t"+color.GreenString("AAABBBCCC"))
 }
 
 func TestWrongAnswerStringColor(t *testing.T) {
@@ -16,7 +16,7 @@ func TestWrongAnswerStringColor(t *testing.T) {
 
 	expected := color.GreenString("YYYYYN") + "\t\t"
 	expected += color.RedString("X ") + color.GreenString("YYYYYN") + color.RedString("NN")
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }
 
 func TestWrongAnswerStringColor2(t *testing.T) {
@@ -25,7 +25,7 @@ func TestWrongAnswerStringColor2(t *testing.T) {
 
 	expected := color.GreenString("YYYYYNNN") + color.RedString("NNN") + "\t\t"
 	expected += color.RedString("X ") + color.GreenString("YYYYYNNN")
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }
 
 func TestApproxColor(t *testing.T) {
@@ -35,7 +35,7 @@ func TestApproxColor(t *testing.T) {
 	expected := color.GreenString("1 3 ") + color.YellowString("2.00002 ") + color.GreenString("3 4")
 	expected += "\t\t"
 	expected += color.YellowString("≈ ") + color.GreenString("1 3 ") + color.YellowString("2.00001   ") + color.GreenString("3   4")
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }
 
 func TestWrongAnswerNumsColor(t *testing.T) {
@@ -45,7 +45,7 @@ func TestWrongAnswerNumsColor(t *testing.T) {
 	expected := color.GreenString("1 2 3 4 5 6 7 ") + color.RedString("8 9")
 	expected += "\t\t"
 	expected += color.RedString("X ") + color.GreenString("1 2  3 4  5 6  7")
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }
 
 func TestWrongAnswerNumsColor2(t *testing.T) {
@@ -55,7 +55,7 @@ func TestWrongAnswerNumsColor2(t *testing.T) {
 	expected := color.GreenString("1 2 3 4 5 6 7 8 9")
 	expected += "\t\t"
 	expected += color.RedString("X ") + color.GreenString("1 2  3 4  5 6  7 8  9 ") + color.RedString("10  11 12")
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }
 
 func TestWrongAnswerNumsColor3(t *testing.T) {
@@ -71,7 +71,7 @@ func TestWrongAnswerNumsColor3(t *testing.T) {
 	expected += color.GreenString("5 ") + color.RedString("7 ") + color.GreenString("7 ") + color.RedString("9 ")
 	expected += color.GreenString("9")
 
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }
 
 func TestStringFallbackHeuristic(t *testing.T) {
@@ -83,5 +83,5 @@ func TestStringFallbackHeuristic(t *testing.T) {
 	expected += color.RedString("X ")
 	expected += color.RedString("1") + color.GreenString("1110001") + color.RedString("01") + color.GreenString("01010")
 
-	test(t, line, expected)
+	expectEq(t, line, expected)
 }

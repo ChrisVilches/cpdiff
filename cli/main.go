@@ -49,10 +49,10 @@ var flags = []cli.Flag{
 		Usage:   "Show line numbers",
 	},
 	&cli.BoolFlag{
-		Name:    "no-color",
+		Name:    "color",
 		Aliases: []string{"c"},
-		Value:   false,
-		Usage:   "Show text without colors",
+		Value:   true,
+		Usage:   "Show output with colors",
 	},
 	&cli.BoolFlag{
 		Name:    "short",

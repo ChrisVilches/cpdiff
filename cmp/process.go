@@ -42,31 +42,29 @@ func newComparisonEntry(
 
 	if lhs.Type() != rhs.Type() {
 		e.CmpRes = CmpRes.Incorrect
-	} else {
-		switch lhs.Type() {
-		case ComparableTypes.RawString:
-			e.CmpRanges = compareStrings(lhs.(RawString), rhs.(RawString))
-		case ComparableTypes.NumArray:
-			e.CmpRanges, e.MaxErr = compareNums(
-				lhs.(NumArray),
-				rhs.(NumArray),
-				allowedError,
-				useRelativeErr,
-			)
-
-			e.HasRealNumbers = lhs.(NumArray).HasRealNumbers() ||
-				rhs.(NumArray).HasRealNumbers()
-		case ComparableTypes.Empty:
-			e.CmpRes = CmpRes.Correct
-		default:
-			panic("Wrong type")
-		}
+		return e
 	}
 
-	if len(e.CmpRanges) != 0 {
-		e.CmpRes = findGlobalResult(e.CmpRanges)
+	switch lhs.Type() {
+	case ComparableTypes.RawString:
+		e.CmpRanges = compareStrings(lhs.(RawString), rhs.(RawString))
+	case ComparableTypes.NumArray:
+		e.CmpRanges, e.MaxErr = compareNums(
+			lhs.(NumArray),
+			rhs.(NumArray),
+			allowedError,
+			useRelativeErr,
+		)
+
+		e.HasRealNumbers = lhs.(NumArray).HasRealNumbers() ||
+			rhs.(NumArray).HasRealNumbers()
+	case ComparableTypes.Empty:
+		e.CmpRes = CmpRes.Correct
+	default:
+		panic("Wrong type")
 	}
 
+	e.CmpRes = findGlobalResult(e.CmpRanges)
 	return e
 }
 
