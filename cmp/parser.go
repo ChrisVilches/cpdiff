@@ -1,7 +1,7 @@
 package cmp
 
 import (
-	"cpdiff/big"
+	"github.com/ChrisVilches/cpdiff/big"
 	"strings"
 )
 

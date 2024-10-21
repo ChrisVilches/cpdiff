@@ -1,8 +1,8 @@
 package cmp
 
 import (
-	"cpdiff/big"
 	"fmt"
+	"github.com/ChrisVilches/cpdiff/big"
 	"math/rand"
 	"slices"
 	"testing"

@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"cpdiff/big"
-	"cpdiff/cmp"
 	"fmt"
+	"github.com/ChrisVilches/cpdiff/big"
+	"github.com/ChrisVilches/cpdiff/cmp"
 	"time"
 
 	"github.com/fatih/color"

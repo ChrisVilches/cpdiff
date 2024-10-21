@@ -1,9 +1,9 @@
 package main
 
 import (
-	"cpdiff/cli"
 	_ "embed"
 	"fmt"
+	"github.com/ChrisVilches/cpdiff/cli"
 	"os"
 	"strings"
 )

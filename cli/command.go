@@ -2,9 +2,9 @@ package cli
 
 import (
 	"bufio"
-	"cpdiff/cmp"
 	"errors"
 	"fmt"
+	"github.com/ChrisVilches/cpdiff/cmp"
 	"os"
 	"strings"
 	"time"

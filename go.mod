@@ -1,4 +1,4 @@
-module cpdiff
+module github.com/ChrisVilches/cpdiff
 
 go 1.23.2
 

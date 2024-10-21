@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"cpdiff/cmp"
-	"cpdiff/util"
+	"github.com/ChrisVilches/cpdiff/cmp"
+	"github.com/ChrisVilches/cpdiff/util"
 	"slices"
 	"strings"
 

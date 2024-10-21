@@ -1,6 +1,6 @@
 package cmp
 
-import "cpdiff/big"
+import "github.com/ChrisVilches/cpdiff/big"
 
 type Comparable interface {
 	Type() ComparableType

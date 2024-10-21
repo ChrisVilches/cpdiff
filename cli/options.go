@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"cpdiff/big"
 	"fmt"
+	"github.com/ChrisVilches/cpdiff/big"
 	"github.com/urfave/cli/v2"
 )
 

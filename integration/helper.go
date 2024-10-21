@@ -2,8 +2,8 @@ package integration
 
 import (
 	"bufio"
-	"cpdiff/cli"
 	"fmt"
+	"github.com/ChrisVilches/cpdiff/cli"
 	"github.com/fatih/color"
 	"io"
 	"os"
