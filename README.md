@@ -2,10 +2,8 @@
 
 ## Installation
 
-### From source
-
 ```sh
-go install github.com/ChrisVilches/cpdiff@latest
+go install github.com/ChrisVilches/cpdiff
 ```
 
 ### Arch Linux (AUR)
