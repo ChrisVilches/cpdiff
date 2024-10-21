@@ -35,5 +35,6 @@ IMG=cpdiff-install-test
 
 docker build -t $IMG .
 docker run --rm $IMG
-docker rmi $IMG
 ```
+
+Clean up manually afterwards (i.e. remove images).
