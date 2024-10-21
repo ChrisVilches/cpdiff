@@ -41,20 +41,20 @@ func compareNums(
 	second NumArray,
 	allowedError big.Decimal,
 	useRelativeErr bool,
-) ([]cmpRange, big.Decimal) {
+) ([]verdictRange, big.Decimal) {
 	n := len(first.nums)
 	m := len(second.nums)
 	size := min(n, m)
-	res := []cmpRange{}
+	res := []verdictRange{}
 	maxErr := big.NewZero()
 
 	for i := 0; i < size; i++ {
-		var v ComparisonResult
+		var v Verdict
 		a := first.nums[i]
 		b := second.nums[i]
 
 		if a.ExactEq(b) {
-			v = CmpRes.Correct
+			v = Verdicts.Correct
 		} else {
 			approx := false
 			var err big.Decimal
@@ -66,20 +66,23 @@ func compareNums(
 			}
 
 			if approx {
-				v = CmpRes.Approx
+				v = Verdicts.Approx
 				maxErr = big.Max(maxErr, err)
 			} else {
-				v = CmpRes.Incorrect
+				v = Verdicts.Incorrect
 			}
 		}
 
-		res = appendCmpRange(res, cmpRange{From: i, To: i + 1, Result: v})
+		res = appendVerdictRange(
+			res,
+			verdictRange{From: i, To: i + 1, Result: v},
+		)
 	}
 
 	if n != m {
-		res = appendCmpRange(
+		res = appendVerdictRange(
 			res,
-			cmpRange{From: size, To: max(n, m), Result: CmpRes.Incorrect},
+			verdictRange{From: size, To: max(n, m), Result: Verdicts.Incorrect},
 		)
 	}
 

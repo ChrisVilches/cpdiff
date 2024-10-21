@@ -25,27 +25,29 @@ func (RawString) Type() ComparableType {
 	return ComparableTypes.RawString
 }
 
-func compareStrings(rs1, rs2 RawString) []cmpRange {
+func compareStrings(rs1, rs2 RawString) []verdictRange {
 	n := len(rs1.value)
 	m := len(rs2.value)
 	size := min(n, m)
-	res := []cmpRange{}
+	res := []verdictRange{}
 
 	for i := 0; i < size; i++ {
-		var v ComparisonResult
+		var v Verdict
 		if rs1.value[i] == rs2.value[i] {
-			v = CmpRes.Correct
+			v = Verdicts.Correct
 		} else {
-			v = CmpRes.Incorrect
+			v = Verdicts.Incorrect
 		}
 
-		res = appendCmpRange(res, cmpRange{From: i, To: i + 1, Result: v})
+		res = appendVerdictRange(res,
+			verdictRange{From: i, To: i + 1, Result: v},
+		)
 	}
 
 	if n != m {
-		res = appendCmpRange(
+		res = appendVerdictRange(
 			res,
-			cmpRange{From: size, To: max(n, m), Result: CmpRes.Incorrect},
+			verdictRange{From: size, To: max(n, m), Result: Verdicts.Incorrect},
 		)
 	}
 

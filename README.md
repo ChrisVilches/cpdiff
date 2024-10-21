@@ -18,9 +18,10 @@ yay -S cpdiff
 
 ## Development
 
-Linting
+Linting and formatting:
 
 ```sh
+go fmt ./...
 revive --formatter stylish ./...
 ```
 

@@ -4,68 +4,24 @@ import (
 	"cpdiff/big"
 )
 
-type ComparisonEntry struct {
-	LHS            Comparable
-	RHS            Comparable
-	CmpRes         ComparisonResult
-	CmpRanges      []cmpRange
-	HasRealNumbers bool
-	MaxErr         big.Decimal
-}
-
-func findGlobalResult(cmpRanges []cmpRange) ComparisonResult {
+func findGlobalResult(cmpRanges []verdictRange) Verdict {
 	approx := false
 
 	for _, r := range cmpRanges {
-		if r.Result == CmpRes.Incorrect {
-			return CmpRes.Incorrect
+		if r.Result == Verdicts.Incorrect {
+			return Verdicts.Incorrect
 		}
 
-		if r.Result == CmpRes.Approx {
+		if r.Result == Verdicts.Approx {
 			approx = true
 		}
 	}
 
 	if approx {
-		return CmpRes.Approx
+		return Verdicts.Approx
 	}
 
-	return CmpRes.Correct
-}
-
-func newComparisonEntry(
-	lhs, rhs Comparable,
-	useRelativeErr bool,
-	allowedError big.Decimal,
-) ComparisonEntry {
-	e := ComparisonEntry{LHS: lhs, RHS: rhs, MaxErr: big.NewZero()}
-
-	if lhs.Type() != rhs.Type() {
-		e.CmpRes = CmpRes.Incorrect
-		return e
-	}
-
-	switch lhs.Type() {
-	case ComparableTypes.RawString:
-		e.CmpRanges = compareStrings(lhs.(RawString), rhs.(RawString))
-	case ComparableTypes.NumArray:
-		e.CmpRanges, e.MaxErr = compareNums(
-			lhs.(NumArray),
-			rhs.(NumArray),
-			allowedError,
-			useRelativeErr,
-		)
-
-		e.HasRealNumbers = lhs.(NumArray).HasRealNumbers() ||
-			rhs.(NumArray).HasRealNumbers()
-	case ComparableTypes.Empty:
-		e.CmpRes = CmpRes.Correct
-	default:
-		panic("Wrong type")
-	}
-
-	e.CmpRes = findGlobalResult(e.CmpRanges)
-	return e
+	return Verdicts.Correct
 }
 
 func bothNumbers(lhs, rhs Comparable) bool {

@@ -12,7 +12,7 @@ import (
 func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 	res := strings.Builder{}
 
-	for _, elem := range entry.CmpRanges {
+	for _, elem := range entry.VerdictRanges {
 		from := elem.From
 		to := min(elem.To, len(s))
 
@@ -36,7 +36,7 @@ func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
 	res := strings.Builder{}
 	prev := 0
 
-	for _, elem := range entry.CmpRanges {
+	for _, elem := range entry.VerdictRanges {
 		lastPos := pos[min(elem.To, len(pos))-1]
 		from := prev
 		to := min(lastPos, len(s))
@@ -59,5 +59,5 @@ func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
 }
 
 func colorAll(s string, entry cmp.ComparisonEntry) (string, error) {
-	return color.New(resultColor(entry.CmpRes)).Sprint(s), nil
+	return color.New(resultColor(entry.Verdict)).Sprint(s), nil
 }

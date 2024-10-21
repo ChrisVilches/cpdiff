@@ -15,28 +15,29 @@ import (
 
 const (
 	separator = "\t\t"
+	chSize    = 100
 )
 
 func shouldSkipLine(line string, opts options) bool {
 	return opts.skipEmptyLines && len(line) == 0
 }
 
-func resultColor(res cmp.ComparisonResult) color.Attribute {
+func resultColor(res cmp.Verdict) color.Attribute {
 	switch res {
-	case cmp.CmpRes.Correct:
+	case cmp.Verdicts.Correct:
 		return color.FgGreen
-	case cmp.CmpRes.Approx:
+	case cmp.Verdicts.Approx:
 		return color.FgYellow
 	default:
 		return color.FgRed
 	}
 }
 
-func resultIcon(res cmp.ComparisonResult) string {
+func resultIcon(res cmp.Verdict) string {
 	switch res {
-	case cmp.CmpRes.Correct:
+	case cmp.Verdicts.Correct:
 		return ""
-	case cmp.CmpRes.Approx:
+	case cmp.Verdicts.Approx:
 		return "≈ "
 	default:
 		return "X "
@@ -63,21 +64,23 @@ func getColorFn(
 	return colorAll
 }
 
+func getPrefix(currLine int, opts options) string {
+	if opts.showLineNum {
+		return fmt.Sprintf("%d\t", currLine)
+	}
+
+	return ""
+}
+
 func showComparisonLine(
 	entry cmp.ComparisonEntry,
 	opts options, line int,
 ) (bool, error) {
-	if opts.showOnlyWrong && entry.CmpRes != cmp.CmpRes.Incorrect {
+	if opts.showOnlyWrong && entry.Verdict != cmp.Verdicts.Incorrect {
 		return false, nil
 	}
 
-	pre := ""
-
-	if opts.showLineNum {
-		pre = `#{}`
-		pre = fmt.Sprintf("%d\t", line)
-	}
-
+	pre := getPrefix(line, opts)
 	var lhsText, rhsText string
 
 	if opts.short {
@@ -88,26 +91,22 @@ func showComparisonLine(
 		rhsText = entry.RHS.Display()
 	}
 
-	iconStr := resultIcon(entry.CmpRes)
+	iconStr := resultIcon(entry.Verdict)
 
 	if opts.showColor {
 		applyColor := getColorFn(entry, opts.short)
 		var err error
 
-		lhsText, err = applyColor(lhsText, entry)
-
-		if err != nil {
+		if lhsText, err = applyColor(lhsText, entry); err != nil {
 			return false, err
 		}
 
-		rhsText, err = applyColor(rhsText, entry)
-
-		if err != nil {
+		if rhsText, err = applyColor(rhsText, entry); err != nil {
 			return false, err
 		}
 
 		if iconStr != "" {
-			iconStr = color.New(resultColor(entry.CmpRes)).Sprint(iconStr)
+			iconStr = color.New(resultColor(entry.Verdict)).Sprint(iconStr)
 		}
 	}
 
@@ -116,9 +115,7 @@ func showComparisonLine(
 	return true, nil
 }
 
-func showFullResult(
-	fullResult fullResult,
-	aborted bool,
+func (v fullResult) print(
 	startTime, endTime time.Time,
 	opts options,
 ) {
@@ -128,13 +125,13 @@ func showFullResult(
 		duration = fmt.Sprintf(" (%s)", endTime.Sub(startTime))
 	}
 
-	if fullResult.totalLines == fullResult.correct {
+	if v.totalLines == v.correct {
 		printfLnColor(
 			color.FgGreen,
 			opts.showColor,
 			"Accepted %d/%d%s",
-			fullResult.correct,
-			fullResult.totalLines,
+			v.correct,
+			v.totalLines,
 			duration,
 		)
 	} else {
@@ -142,17 +139,17 @@ func showFullResult(
 			color.FgRed,
 			opts.showColor,
 			"Wrong Answer %d/%d%s",
-			fullResult.correct,
-			fullResult.totalLines,
+			v.correct,
+			v.totalLines,
 			duration,
 		)
 	}
 
-	if aborted {
+	if v.aborted {
 		printfLnColor(color.FgRed, opts.showColor, "Aborted")
 	}
 
-	if fullResult.hasRealNumbers {
+	if v.hasRealNumbers {
 		errType := "absolute"
 
 		if opts.useRelativeError {
@@ -163,7 +160,7 @@ func showFullResult(
 			color.FgYellow,
 			opts.showColor,
 			"Max error found was %s (using %s error of %s)",
-			fullResult.maxErr.String(),
+			v.maxErr.String(),
 			errType,
 			opts.error.String(),
 		)
@@ -192,6 +189,8 @@ type fullResult struct {
 	totalLines     int
 	correct        int
 	hasRealNumbers bool
+	aborted        bool
+	printedLines   int
 	maxErr         big.Decimal
 }
 
@@ -211,7 +210,7 @@ func (v fullResult) toError() error {
 }
 
 func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
-	if entry.CmpRes != cmp.CmpRes.Incorrect {
+	if entry.Verdict != cmp.Verdicts.Incorrect {
 		v.correct++
 	}
 
@@ -268,6 +267,34 @@ func getBothFiles(args []string) ([]*os.File, error) {
 	return files, nil
 }
 
+func listenEntries(
+	entries chan cmp.ComparisonEntry,
+	opts options,
+) (*fullResult, error) {
+	res := newFullResult()
+
+	for entry := range entries {
+		res = res.putEntry(entry)
+
+		shown, err := showComparisonLine(entry, opts, res.totalLines)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if shown {
+			res.printedLines++
+		}
+
+		if opts.abortEarly && entry.Verdict == cmp.Verdicts.Incorrect {
+			res.aborted = true
+			break
+		}
+	}
+
+	return &res, nil
+}
+
 func mainCommand(opts options, args []string) error {
 	startTime := time.Now()
 
@@ -283,13 +310,9 @@ func mainCommand(opts options, args []string) error {
 	lhs := bufio.NewScanner(files[0])
 	rhs := bufio.NewScanner(files[1])
 
-	const chSize = 100
-
 	entries := make(chan cmp.ComparisonEntry, chSize)
 	lhsCh := make(chan string, chSize)
 	rhsCh := make(chan string, chSize)
-
-	aborted := false
 
 	go readLinesToChannel(lhs, lhsCh, opts)
 	go readLinesToChannel(rhs, rhsCh, opts)
@@ -302,26 +325,10 @@ func mainCommand(opts options, args []string) error {
 		entries,
 	)
 
-	fullResult := newFullResult()
-	printedLines := false
+	fullResult, err := listenEntries(entries, opts)
 
-	for entry := range entries {
-		fullResult = fullResult.putEntry(entry)
-
-		shown, err := showComparisonLine(entry, opts, fullResult.totalLines)
-
-		if err != nil {
-			return err
-		}
-
-		if shown {
-			printedLines = true
-		}
-
-		if opts.abortEarly && entry.CmpRes == cmp.CmpRes.Incorrect {
-			aborted = true
-			break
-		}
+	if err != nil {
+		return err
 	}
 
 	if err := lhs.Err(); err != nil {
@@ -332,11 +339,11 @@ func mainCommand(opts options, args []string) error {
 		return err
 	}
 
-	if printedLines {
+	if fullResult.printedLines > 0 {
 		fmt.Println()
 	}
 
-	showFullResult(fullResult, aborted, startTime, time.Now(), opts)
+	fullResult.print(startTime, time.Now(), opts)
 
 	return fullResult.toError()
 }

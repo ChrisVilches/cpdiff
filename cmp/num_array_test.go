@@ -58,15 +58,15 @@ func TestCompareNums(t *testing.T) {
 
 	err := big.NewFromStringUnsafe("0.0001")
 
-	ans := [][]cmpRange{
-		{{From: 0, To: 3, Result: CmpRes.Correct}},
-		{{From: 0, To: 5, Result: CmpRes.Correct}, {From: 5, To: 6, Result: CmpRes.Incorrect}},
-		{{From: 0, To: 3, Result: CmpRes.Incorrect}, {From: 3, To: 6, Result: CmpRes.Correct}},
-		{{From: 0, To: 6, Result: CmpRes.Incorrect}},
-		{{From: 0, To: 1, Result: CmpRes.Correct}},
-		{{From: 0, To: 1, Result: CmpRes.Approx}},
-		{{From: 0, To: 1, Result: CmpRes.Approx}},
-		{{From: 0, To: 1, Result: CmpRes.Incorrect}},
+	ans := [][]verdictRange{
+		{{From: 0, To: 3, Result: Verdicts.Correct}},
+		{{From: 0, To: 5, Result: Verdicts.Correct}, {From: 5, To: 6, Result: Verdicts.Incorrect}},
+		{{From: 0, To: 3, Result: Verdicts.Incorrect}, {From: 3, To: 6, Result: Verdicts.Correct}},
+		{{From: 0, To: 6, Result: Verdicts.Incorrect}},
+		{{From: 0, To: 1, Result: Verdicts.Correct}},
+		{{From: 0, To: 1, Result: Verdicts.Approx}},
+		{{From: 0, To: 1, Result: Verdicts.Approx}},
+		{{From: 0, To: 1, Result: Verdicts.Incorrect}},
 	}
 
 	for i, testCase := range data {
@@ -103,7 +103,7 @@ func TestCompareNumsHuge(t *testing.T) {
 	size := 200_000
 	useDecimal := []bool{false, false, true, true, true}
 	zeroPos := []int{-1, 5_000, -1, 198_999, 50000}
-	res := []ComparisonResult{CmpRes.Correct, CmpRes.Incorrect, CmpRes.Correct, CmpRes.Approx, CmpRes.Incorrect}
+	res := []Verdict{Verdicts.Correct, Verdicts.Incorrect, Verdicts.Correct, Verdicts.Approx, Verdicts.Incorrect}
 	err := big.NewFromStringUnsafe("0.0001")
 
 	for testCase := range useDecimal {
