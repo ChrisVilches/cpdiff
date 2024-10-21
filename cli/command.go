@@ -8,8 +8,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 const (
@@ -19,17 +17,6 @@ const (
 
 func shouldSkipLine(line string, opts options) bool {
 	return opts.skipEmptyLines && len(line) == 0
-}
-
-func resultColor(res cmp.Verdict) color.Attribute {
-	switch res {
-	case cmp.Verdicts.Correct:
-		return color.FgGreen
-	case cmp.Verdicts.Approx:
-		return color.FgYellow
-	default:
-		return color.FgRed
-	}
 }
 
 func resultIcon(res cmp.Verdict) string {
@@ -105,7 +92,7 @@ func showComparisonEntry(
 		}
 
 		if iconStr != "" {
-			iconStr = color.New(resultColor(entry.Verdict)).Sprint(iconStr)
+			iconStr = resultColor(entry.Verdict).Sprint(iconStr)
 		}
 	}
 

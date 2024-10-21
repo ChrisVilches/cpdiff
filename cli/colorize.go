@@ -9,6 +9,21 @@ import (
 	"github.com/fatih/color"
 )
 
+var green = color.New(color.FgGreen)
+var red = color.New(color.FgRed)
+var yellow = color.New(color.FgYellow)
+
+func resultColor(res cmp.Verdict) *color.Color {
+	switch res {
+	case cmp.Verdicts.Correct:
+		return green
+	case cmp.Verdicts.Approx:
+		return yellow
+	default:
+		return red
+	}
+}
+
 func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 	res := strings.Builder{}
 
@@ -21,7 +36,7 @@ func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 		}
 
 		c := resultColor(elem.Result)
-		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))
+		_, err := res.WriteString(c.Sprint(s[from:to]))
 
 		if err != nil {
 			return "", err
@@ -46,7 +61,7 @@ func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
 		}
 
 		c := resultColor(elem.Result)
-		_, err := res.WriteString(color.New(c).Sprint(s[from:to]))
+		_, err := res.WriteString(c.Sprint(s[from:to]))
 
 		if err != nil {
 			return "", err
@@ -59,5 +74,5 @@ func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
 }
 
 func colorAll(s string, entry cmp.ComparisonEntry) (string, error) {
-	return color.New(resultColor(entry.Verdict)).Sprint(s), nil
+	return resultColor(entry.Verdict).Sprint(s), nil
 }
