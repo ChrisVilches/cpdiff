@@ -5,4 +5,6 @@ RUN echo 1.0000002 > ans
 
 RUN go install github.com/ChrisVilches/cpdiff@latest
 
-ENTRYPOINT FORCE_COLOR=1 cpdiff in ans
+ENV FORCE_COLOR=1
+
+ENTRYPOINT ["cpdiff", "in", "ans"]
