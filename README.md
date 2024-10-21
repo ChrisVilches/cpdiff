@@ -3,7 +3,7 @@
 ## Installation
 
 ```sh
-go install github.com/ChrisVilches/cpdiff
+go install github.com/ChrisVilches/cpdiff@latest
 ```
 
 ### Arch Linux (AUR)
@@ -26,4 +26,14 @@ In order to run tests, first build the project, then set the environment variabl
 ```sh
 go build
 INTEGRATION_TEST_EXECUTABLE=/path/cpdiff go test ./...
+```
+
+Verify installation command works:
+
+```sh
+IMG=cpdiff-install-test
+
+docker build -t $IMG .
+docker run --rm $IMG
+docker rmi $IMG
 ```
