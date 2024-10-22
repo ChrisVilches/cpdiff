@@ -102,6 +102,10 @@ func App(packageName, description, descriptionLong, version string) error {
 		Action: func(ctx *cli.Context) error {
 			args := ctx.Args().Slice()
 
+			if !ctx.Bool("color") {
+				color.NoColor = true
+			}
+
 			return mainCommand(newOptions(ctx), args)
 		},
 	}

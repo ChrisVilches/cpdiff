@@ -8,7 +8,6 @@ import (
 
 type options struct {
 	short            bool
-	showColor        bool
 	showDuration     bool
 	showLineNum      bool
 	skipEmptyLines   bool
@@ -51,7 +50,6 @@ func newOptions(ctx *cli.Context) options {
 	res := options{
 		trim:             ctx.Bool("trim"),
 		short:            ctx.Bool("short"),
-		showColor:        ctx.Bool("color"),
 		showDuration:     ctx.Bool("duration"),
 		showLineNum:      ctx.Bool("linenum"),
 		useRelativeError: ctx.Bool("relative"),

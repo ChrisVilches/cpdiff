@@ -48,6 +48,25 @@ func newFullResult() fullResult {
 	}
 }
 
+func fmtVerdict(correct, total int, duration string) string {
+	var c *color.Color
+	var msg string
+	if correct == total {
+		msg = "Accepted"
+		c = color.New(color.FgGreen)
+	} else {
+		msg = "Wrong Answer"
+		c = color.New(color.FgRed)
+	}
+
+	res := ""
+	c.Add(color.Bold)
+	res += c.Sprint(msg)
+	c.Add(color.ResetBold)
+	res += c.Sprintf(" %d/%d%s", correct, total, duration)
+	return res
+}
+
 func (v fullResult) print(
 	startTime, endTime time.Time,
 	opts options,
@@ -58,28 +77,10 @@ func (v fullResult) print(
 		duration = fmt.Sprintf(" (%s)", endTime.Sub(startTime))
 	}
 
-	if v.totalLines == v.correct {
-		printfLnColor(
-			color.FgGreen,
-			opts.showColor,
-			"Accepted %d/%d%s",
-			v.correct,
-			v.totalLines,
-			duration,
-		)
-	} else {
-		printfLnColor(
-			color.FgRed,
-			opts.showColor,
-			"Wrong Answer %d/%d%s",
-			v.correct,
-			v.totalLines,
-			duration,
-		)
-	}
+	fmt.Println(fmtVerdict(v.correct, v.totalLines, duration))
 
 	if v.aborted {
-		printfLnColor(color.FgRed, opts.showColor, "Aborted")
+		fmt.Println(color.RedString("Aborted"))
 	}
 
 	if v.hasRealNumbers {
@@ -89,13 +90,12 @@ func (v fullResult) print(
 			errType = "relative"
 		}
 
-		printfLnColor(
-			color.FgYellow,
-			opts.showColor,
-			"Max error found was %s (using %s error of %s)",
-			v.maxErr.String(),
-			errType,
-			opts.error.String(),
+		fmt.Println(
+			color.YellowString("Max error found was %s (using %s error of %s)",
+				v.maxErr.String(),
+				errType,
+				opts.error.String(),
+			),
 		)
 	}
 }

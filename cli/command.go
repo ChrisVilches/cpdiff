@@ -93,21 +93,19 @@ func showComparisonEntry(
 	iconStr := resultIcon(entry.Verdict)
 	padding := getPadding(len(lhsText), opts.leftExtraPadding)
 
-	if opts.showColor {
-		applyColor := getColorFn(entry, opts.short)
-		var err error
+	applyColor := getColorFn(entry, opts.short)
+	var err error
 
-		if lhsText, err = applyColor(lhsText, entry); err != nil {
-			return false, err
-		}
+	if lhsText, err = applyColor(lhsText, entry); err != nil {
+		return false, err
+	}
 
-		if rhsText, err = applyColor(rhsText, entry); err != nil {
-			return false, err
-		}
+	if rhsText, err = applyColor(rhsText, entry); err != nil {
+		return false, err
+	}
 
-		if iconStr != " " {
-			iconStr = resultColor(entry.Verdict).Sprint(iconStr)
-		}
+	if iconStr != " " {
+		iconStr = resultColor(entry.Verdict).Sprint(iconStr)
 	}
 
 	fmt.Printf("%s%s%s%s%s  %s\n", pre, lhsText, padding, sep, iconStr, rhsText)
