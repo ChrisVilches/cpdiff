@@ -5,17 +5,17 @@ type RawString struct {
 }
 
 const (
-	ellipses  = "..."
-	maxLength = 10
+	ellipses = "..."
 )
 
 func (r RawString) Display() string {
 	return r.value
 }
 
-func (r RawString) ShortDisplay() string {
+func (r RawString) ShortDisplay(maxLength int) string {
 	if len(r.value) > maxLength {
-		return r.value[0:maxLength-len(ellipses)] + ellipses
+		l := max(maxLength-len(ellipses), 1)
+		return r.value[0:l] + ellipses
 	}
 
 	return r.value

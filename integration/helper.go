@@ -12,6 +12,8 @@ import (
 	"testing"
 )
 
+const noPaddingFlag = "-p=0"
+
 func expectEq[T comparable](t *testing.T, a, b T) {
 	if a != b {
 		t.Fatalf("expected '%v' to be equal to '%v'", a, b)
@@ -21,9 +23,19 @@ func expectEq[T comparable](t *testing.T, a, b T) {
 func expectLinesNotContain(t *testing.T, lines []string, s string) {
 	for _, line := range lines {
 		if strings.Contains(line, s) {
-			t.Fatalf("expected output not to contain text %s", s)
+			t.Fatalf("expected lines not to contain text %s", s)
 		}
 	}
+}
+
+func expectLinesContainPrefix(t *testing.T, lines []string, s string) {
+	for _, line := range lines {
+		if strings.HasPrefix(line, s) {
+			return
+		}
+	}
+
+	t.Fatalf("expected lines to contain line with prefix %s", s)
 }
 
 func expectLinesContain(t *testing.T, lines []string, s string) {
@@ -33,7 +45,7 @@ func expectLinesContain(t *testing.T, lines []string, s string) {
 		}
 	}
 
-	t.Fatalf("expected output to contain text %s", s)
+	t.Fatalf("expected lines to contain line with content %s", s)
 }
 
 func bytesIntoLines(bytes []byte) []string {

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	separator = "\t\t"
-	chSize    = 100
+	sep    = "\t\t"
+	chSize = 100
 )
 
 func shouldSkipLine(line string, opts options) bool {
@@ -22,11 +22,11 @@ func shouldSkipLine(line string, opts options) bool {
 func resultIcon(res cmp.Verdict) string {
 	switch res {
 	case cmp.Verdicts.Correct:
-		return ""
+		return " "
 	case cmp.Verdicts.Approx:
-		return "≈ "
+		return "≈"
 	default:
-		return "X "
+		return "X"
 	}
 }
 
@@ -58,6 +58,18 @@ func getPrefix(currLine int, opts options) string {
 	return ""
 }
 
+func getColMaxLengthHeuristic(opts options) int {
+	return opts.leftExtraPadding
+}
+
+func getPadding(strlen, maxPad int) string {
+	diff := maxPad - strlen
+	if diff <= 0 {
+		return ""
+	}
+	return strings.Repeat(" ", diff)
+}
+
 func showComparisonEntry(
 	entry cmp.ComparisonEntry,
 	opts options, line int,
@@ -70,14 +82,16 @@ func showComparisonEntry(
 	var lhsText, rhsText string
 
 	if opts.short {
-		lhsText = entry.LHS.ShortDisplay()
-		rhsText = entry.RHS.ShortDisplay()
+		maxLength := getColMaxLengthHeuristic(opts)
+		lhsText = entry.LHS.ShortDisplay(maxLength)
+		rhsText = entry.RHS.ShortDisplay(maxLength)
 	} else {
 		lhsText = entry.LHS.Display()
 		rhsText = entry.RHS.Display()
 	}
 
 	iconStr := resultIcon(entry.Verdict)
+	padding := getPadding(len(lhsText), opts.leftExtraPadding)
 
 	if opts.showColor {
 		applyColor := getColorFn(entry, opts.short)
@@ -91,12 +105,12 @@ func showComparisonEntry(
 			return false, err
 		}
 
-		if iconStr != "" {
+		if iconStr != " " {
 			iconStr = resultColor(entry.Verdict).Sprint(iconStr)
 		}
 	}
 
-	fmt.Printf("%s%s%s%s%s\n", pre, lhsText, separator, iconStr, rhsText)
+	fmt.Printf("%s%s%s%s%s  %s\n", pre, lhsText, padding, sep, iconStr, rhsText)
 
 	return true, nil
 }

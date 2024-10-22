@@ -17,6 +17,7 @@ type options struct {
 	showOnlyWrong    bool
 	trim             bool
 	numbers          bool
+	leftExtraPadding int
 	error            big.Decimal
 }
 
@@ -58,6 +59,7 @@ func newOptions(ctx *cli.Context) options {
 		showOnlyWrong:    ctx.Bool("wrong"),
 		skipEmptyLines:   ctx.Bool("ignore-empty"),
 		numbers:          ctx.Bool("numbers"),
+		leftExtraPadding: ctx.Int("padding"),
 		error:            err,
 	}
 

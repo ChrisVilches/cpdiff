@@ -36,7 +36,7 @@ func TestNumArrayShortDisplay(t *testing.T) {
 		expected := ans[i]
 
 		s := newComparable(input).(NumArray)
-		res := s.ShortDisplay()
+		res := s.ShortDisplay(10)
 
 		if res != expected {
 			t.Fatalf("expected '%s' to be '%s'", input, expected)

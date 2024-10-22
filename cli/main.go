@@ -12,6 +12,12 @@ const ForceColorFlag = "FORCE_COLOR"
 const defaultError = "0.0001"
 
 var flags = []cli.Flag{
+	&cli.IntFlag{
+		Name:    "padding",
+		Aliases: []string{"p"},
+		Value:   30,
+		Usage:   "Pad the left side output until its length reaches this value",
+	},
 	&cli.BoolFlag{
 		Name:    "numbers",
 		Aliases: []string{"n"},

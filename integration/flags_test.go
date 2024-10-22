@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"github.com/fatih/color"
+	"strings"
 	"testing"
 )
 
@@ -32,10 +34,56 @@ func TestIgnoreEmptyLinesFlag(t *testing.T) {
 }
 
 func TestLineNumFlag(t *testing.T) {
-	expectLinesContain(t, getLines(2, "-l"), "1\t")
-	expectLinesContain(t, getLines(2, "-l"), "2\t")
-	expectLinesContain(t, getLines(2, "--linenum"), "1\t")
-	expectLinesContain(t, getLines(2, "--linenum"), "2\t")
+	expectLinesContainPrefix(t, getLines(2, "-l"), "1\t")
+	expectLinesContainPrefix(t, getLines(2, "-l"), "2\t")
+	expectLinesContainPrefix(t, getLines(2, "--linenum"), "1\t")
+	expectLinesContainPrefix(t, getLines(2, "--linenum"), "2\t")
 	expectLinesNotContain(t, getLines(2), "1 ")
 	expectLinesNotContain(t, getLines(2), "2 ")
+}
+
+func TestPaddingFlagWithoutColor(t *testing.T) {
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-p=0"), "YYYYYN\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-p=1"), "YYYYYN\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-p=5"), "YYYYYN\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-p=6"), "YYYYYN\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-p=7"), "YYYYYN \t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-p=8"), "YYYYYN  \t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=0"), "Y...\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=1"), "Y...\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=4"), "Y...\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=5"), "YY...\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=6"), "YYYYYN\t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=7"), "YYYYYN \t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=8"), "YYYYYN  \t\tX")
+	expectLinesContainPrefix(t, getLines(2, "-c=0", "-s", "-p=8"), "YYYYY...\t\tX")
+}
+
+func TestPaddingFlagWithColor(t *testing.T) {
+	build := func(correctPrefix, wrongSuffix string, spaceCount int) string {
+		left := ""
+		if len(correctPrefix) > 0 {
+			left += color.GreenString(correctPrefix)
+		}
+		if len(wrongSuffix) > 0 {
+			left += color.RedString(wrongSuffix)
+		}
+		return left + strings.Repeat(" ", spaceCount) + "\t\t" + color.RedString("X")
+	}
+	expectLinesContainPrefix(t, getLines(2, "-p=0"), build("YYYYYN", "", 0))
+	expectLinesContainPrefix(t, getLines(2, "-p=6"), build("YYYYYN", "", 0))
+	expectLinesContainPrefix(t, getLines(2, "-p=7"), build("YYYYYN", "", 1))
+	expectLinesContainPrefix(t, getLines(2, "-p=11"), build("YYYYYN", "", 5))
+	expectLinesContainPrefix(t, getLines(2, "-p=0"), build("YYYYYNNN", "NNN", 0))
+	expectLinesContainPrefix(t, getLines(2, "-p=11"), build("YYYYYNNN", "NNN", 0))
+	expectLinesContainPrefix(t, getLines(2, "-p=12"), build("YYYYYNNN", "NNN", 1))
+	expectLinesContainPrefix(t, getLines(2, "-p=17"), build("YYYYYNNN", "NNN", 6))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=0"), build("", "Y...", 0))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=5"), build("", "YY...", 0))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=6"), build("", "YYY...", 0))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=7"), build("", "YYYYYN", 1))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=11"), build("", "YYYYYN", 5))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=11"), build("", "YYYYYNNNNNN", 0))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=12"), build("", "YYYYYNNNNNN", 1))
+	expectLinesContainPrefix(t, getLines(2, "-s", "-p=15"), build("", "YYYYYNNNNNN", 4))
 }

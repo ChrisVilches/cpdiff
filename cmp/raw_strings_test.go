@@ -19,7 +19,7 @@ func TestRawStringShortDisplay(t *testing.T) {
 		expected := testCase[1]
 
 		s := RawString{value: input}
-		res := s.ShortDisplay()
+		res := s.ShortDisplay(10)
 
 		if res != expected {
 			t.Fatalf("expected %s to be %s", res, expected)

@@ -6,7 +6,7 @@ func (Empty) Display() string {
 	return "-"
 }
 
-func (Empty) ShortDisplay() string {
+func (Empty) ShortDisplay(int) string {
 	return "-"
 }
 

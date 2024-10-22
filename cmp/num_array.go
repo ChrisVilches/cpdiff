@@ -28,7 +28,7 @@ func (n NumArray) Display() string {
 	return n.rawData
 }
 
-func (n NumArray) ShortDisplay() string {
+func (n NumArray) ShortDisplay(int) string {
 	if len(n.nums) == 1 {
 		return n.rawData
 	}

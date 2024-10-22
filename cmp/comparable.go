@@ -5,7 +5,7 @@ import "github.com/ChrisVilches/cpdiff/big"
 type Comparable interface {
 	Type() ComparableType
 	Display() string
-	ShortDisplay() string
+	ShortDisplay(int) string
 }
 
 type ComparableType int
