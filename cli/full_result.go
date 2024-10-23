@@ -11,12 +11,11 @@ import (
 )
 
 type fullResult struct {
-	totalLines     int
-	correct        int
-	hasRealNumbers bool
-	aborted        bool
-	printedLines   int
-	maxErr         big.Decimal
+	totalLines   int
+	correct      int
+	aborted      bool
+	printedLines int
+	maxErr       big.Decimal
 }
 
 func (v fullResult) toError() error {
@@ -33,19 +32,17 @@ func (v fullResult) putEntry(entry cmp.ComparisonEntry) fullResult {
 	}
 
 	return fullResult{
-		totalLines:     v.totalLines + 1,
-		correct:        v.correct,
-		hasRealNumbers: v.hasRealNumbers || entry.HasRealNumbers,
-		maxErr:         big.Max(v.maxErr, entry.MaxErr),
+		totalLines: v.totalLines + 1,
+		correct:    v.correct,
+		maxErr:     big.Max(v.maxErr, entry.MaxErr),
 	}
 }
 
 func newFullResult() fullResult {
 	return fullResult{
-		totalLines:     0,
-		correct:        0,
-		hasRealNumbers: false,
-		maxErr:         big.NewZero(),
+		totalLines: 0,
+		correct:    0,
+		maxErr:     big.NewZero(),
 	}
 }
 
@@ -88,7 +85,7 @@ func (v fullResult) print(
 		fmt.Println(color.RedString("Aborted"))
 	}
 
-	if v.hasRealNumbers && !v.maxErr.ExactEq(big.NewZero()) {
+	if !v.maxErr.ExactEq(big.NewZero()) {
 		errType := "absolute"
 
 		if opts.useRelativeError {

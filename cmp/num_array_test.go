@@ -10,23 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestHasRealNumbers(t *testing.T) {
-	data := []string{"1 2 3 4 5 6", "1 2 3 4.005 5 6"}
-	ans := []bool{false, true}
-
-	for i, testCase := range data {
-		input := testCase
-		expected := ans[i]
-
-		s := newComparable(input).(NumArray)
-		res := s.HasRealNumbers()
-
-		if res != expected {
-			t.Fatalf("expected %s to have real numbers (%t)", input, expected)
-		}
-	}
-}
-
 func TestNumArrayShortDisplay(t *testing.T) {
 	data := []string{"1 2 3 4 5 6", "1 2 3 4.005 5 6  0 ", " 5  ", " 1 5 ", " 5.5551"}
 	ans := []string{"(6 numbers...)", "(7 numbers...)", " 5  ", "(2 numbers...)", " 5.5551"}

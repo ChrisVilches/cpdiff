@@ -21,12 +21,11 @@ var ComparableTypes = struct {
 }
 
 type ComparisonEntry struct {
-	LHS            Comparable
-	RHS            Comparable
-	Verdict        Verdict
-	VerdictRanges  []verdictRange
-	HasRealNumbers bool
-	MaxErr         big.Decimal
+	LHS           Comparable
+	RHS           Comparable
+	Verdict       Verdict
+	VerdictRanges []verdictRange
+	MaxErr        big.Decimal
 }
 
 func newComparisonEntry(
@@ -51,9 +50,6 @@ func newComparisonEntry(
 			allowedError,
 			useRelativeErr,
 		)
-
-		e.HasRealNumbers = lhs.(NumArray).HasRealNumbers() ||
-			rhs.(NumArray).HasRealNumbers()
 	case ComparableTypes.Empty:
 		e.Verdict = Verdicts.Correct
 	default:

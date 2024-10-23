@@ -14,16 +14,6 @@ func (NumArray) Type() ComparableType {
 	return ComparableTypes.NumArray
 }
 
-func (n NumArray) HasRealNumbers() bool {
-	for _, num := range n.nums {
-		if !num.IsInt() {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (n NumArray) Display() string {
 	return n.rawData
 }
