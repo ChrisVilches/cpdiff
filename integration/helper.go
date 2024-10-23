@@ -50,6 +50,11 @@ func expectLinesContain(t *testing.T, lines []string, s string) {
 
 func bytesIntoLines(bytes []byte) []string {
 	trimmed := strings.TrimSpace(string(bytes))
+
+	if len(trimmed) == 0 {
+		return nil
+	}
+
 	lines := strings.Split(trimmed, "\n")
 
 	for i := range lines {

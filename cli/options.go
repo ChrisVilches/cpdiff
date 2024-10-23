@@ -7,6 +7,7 @@ import (
 )
 
 type options struct {
+	quiet            bool
 	short            bool
 	showDuration     bool
 	showLineNum      bool
@@ -48,12 +49,13 @@ func newOptions(ctx *cli.Context) options {
 	}
 
 	res := options{
+		quiet:            ctx.Bool("quiet"),
 		trim:             ctx.Bool("trim"),
 		short:            ctx.Bool("short"),
 		showDuration:     ctx.Bool("duration"),
 		showLineNum:      ctx.Bool("linenum"),
 		useRelativeError: ctx.Bool("relative"),
-		abortEarly:       ctx.Bool("exit"),
+		abortEarly:       ctx.Bool("quiet") || ctx.Bool("exit"),
 		showOnlyWrong:    ctx.Bool("wrong"),
 		skipEmptyLines:   ctx.Bool("ignore-empty"),
 		numbers:          ctx.Bool("numbers"),

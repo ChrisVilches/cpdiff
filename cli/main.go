@@ -19,6 +19,12 @@ var flags = []cli.Flag{
 		Usage:   "Pad the left side output until its length reaches this value",
 	},
 	&cli.BoolFlag{
+		Name:    "quiet",
+		Aliases: []string{"q"},
+		Value:   false,
+		Usage:   "Suppress standard output and only return exit code",
+	},
+	&cli.BoolFlag{
 		Name:    "numbers",
 		Aliases: []string{"n"},
 		Value:   true,

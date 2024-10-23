@@ -103,3 +103,30 @@ func TestRelError(t *testing.T) {
 		}
 	}
 }
+
+func TestExactEq(t *testing.T) {
+	data := [][]string{
+		{"0", "0.000000000000000000000"},
+		{"45.1000", "45.100000000000000000000"},
+		{"789546543216", "789546543216"},
+		{"45643125.98796546", "45643125.98796546"},
+	}
+	for _, testCase := range data {
+		a, _ := NewFromString(testCase[0])
+		b, _ := NewFromString(testCase[1])
+		if !a.ExactEq(b) {
+			t.Fatal("expected the two values to be exactly the same")
+		}
+	}
+	data2 := [][]string{
+		{"0", "0.0000000000000000000001"},
+		{"45.1000", "45.1000000000000000000001"},
+	}
+	for _, testCase := range data2 {
+		a, _ := NewFromString(testCase[0])
+		b, _ := NewFromString(testCase[1])
+		if a.ExactEq(b) {
+			t.Fatal("expected the two values to be different")
+		}
+	}
+}

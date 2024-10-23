@@ -74,7 +74,9 @@ func showComparisonEntry(
 	entry cmp.ComparisonEntry,
 	opts options, line int,
 ) (bool, error) {
-	if opts.showOnlyWrong && entry.Verdict != cmp.Verdicts.Incorrect {
+	correctAns := entry.Verdict != cmp.Verdicts.Incorrect
+
+	if opts.quiet || (opts.showOnlyWrong && correctAns) {
 		return false, nil
 	}
 

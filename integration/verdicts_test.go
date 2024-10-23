@@ -9,8 +9,7 @@ import (
 func TestAccepted(t *testing.T) {
 	lines := getLines(1)
 	res := "\033[32;1mAccepted\033[0;22m\033[32;1;22m 3/3\033[0;22;0m"
-	expectEq(t, lines[len(lines)-2], res)
-	expectEq(t, lines[len(lines)-1], color.YellowString("Max error found was 0 (using absolute error of 0.0001)"))
+	expectEq(t, lines[len(lines)-1], res)
 }
 
 func TestWrongAnswer(t *testing.T) {

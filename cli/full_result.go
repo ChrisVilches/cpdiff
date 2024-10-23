@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/ChrisVilches/cpdiff/big"
 	"github.com/ChrisVilches/cpdiff/cmp"
-	"time"
 
 	"github.com/fatih/color"
 )
@@ -71,6 +72,10 @@ func (v fullResult) print(
 	startTime, endTime time.Time,
 	opts options,
 ) {
+	if opts.quiet {
+		return
+	}
+
 	var duration string
 
 	if opts.showDuration {
@@ -83,7 +88,7 @@ func (v fullResult) print(
 		fmt.Println(color.RedString("Aborted"))
 	}
 
-	if v.hasRealNumbers {
+	if v.hasRealNumbers && !v.maxErr.ExactEq(big.NewZero()) {
 		errType := "absolute"
 
 		if opts.useRelativeError {

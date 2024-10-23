@@ -2,9 +2,22 @@ package integration
 
 import (
 	"github.com/fatih/color"
+	"math/rand"
 	"strings"
 	"testing"
 )
+
+func TestQuietFlag(t *testing.T) {
+	flags := []string{"-q", "--quiet"}
+
+	codes := []int{0, 1, 0, 1, 0, 1}
+
+	for i := 0; i < 6; i++ {
+		expectEq(t, getStatusCode(i+1), codes[i])
+		lines := getLines(i+1, flags[rand.Int()%2])
+		expectEq(t, len(lines), 0)
+	}
+}
 
 func TestExitFlag(t *testing.T) {
 	expectLinesContain(t, getLines(2, "-x"), "Aborted")
@@ -19,9 +32,9 @@ func TestDurationFlag(t *testing.T) {
 }
 
 func TestWrongFlag(t *testing.T) {
-	expectEq(t, len(getLines(1, "-w")), 2)
-	expectEq(t, len(getLines(1, "--wrong")), 2)
-	expectEq(t, len(getLines(1)), 6)
+	expectEq(t, len(getLines(1, "-w")), 1)
+	expectEq(t, len(getLines(1, "--wrong")), 1)
+	expectEq(t, len(getLines(1)), 5)
 	expectEq(t, len(getLines(5, "-w")), 1)
 	expectEq(t, len(getLines(5, "--wrong")), 1)
 	expectEq(t, len(getLines(5)), 4)
