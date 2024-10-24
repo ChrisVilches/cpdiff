@@ -1,9 +1,25 @@
 # cpdiff
 
+File difference tool for competitive programming.
+
 ## Installation
 
 ```sh
 go install github.com/ChrisVilches/cpdiff@latest
+```
+
+## Usage
+
+Comparing standard input (e.g. some program's output redirected to `cpdiff`) against a file (e.g. the correct answer).
+
+```sh
+./my-program < in-file | cpdiff ans-file
+```
+
+Or compare two files:
+
+```sh
+cpdiff file1 file2
 ```
 
 ## Screenshots
