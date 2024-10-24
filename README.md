@@ -10,7 +10,7 @@ go install github.com/ChrisVilches/cpdiff@latest
 
 ## Usage
 
-Comparing standard input (e.g. some program's output redirected to `cpdiff`) against a file (e.g. the correct answer).
+Comparing standard input (e.g. some program's output redirected to `cpdiff`) against a file (e.g. the correct answer):
 
 ```sh
 ./my-program < in-file | cpdiff ans-file
