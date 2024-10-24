@@ -43,19 +43,19 @@ type verdictRange struct {
 
 func appendVerdictRange(
 	list []verdictRange,
-	newValue verdictRange,
+	item verdictRange,
 ) []verdictRange {
 	if len(list) == 0 {
-		return append(list, newValue)
+		return append(list, item)
 	}
 
 	last := &list[len(list)-1]
 
-	if last.To == newValue.From && last.Value == newValue.Value {
-		last.To = newValue.To
+	if last.To == item.From && last.Value == item.Value {
+		last.To = item.To
 
 		return list
 	}
 
-	return append(list, newValue)
+	return append(list, item)
 }
