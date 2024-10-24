@@ -22,6 +22,12 @@ Or compare two files:
 cpdiff file1 file2
 ```
 
+Help (see all options):
+
+```sh
+cpdiff --help
+```
+
 ## Screenshots
 
 Comparing each number individually. Numbers are allowed to have an error:
