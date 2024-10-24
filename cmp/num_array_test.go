@@ -42,14 +42,14 @@ func TestCompareNums(t *testing.T) {
 	err := big.NewFromStringUnsafe("0.0001")
 
 	ans := [][]verdictRange{
-		{{From: 0, To: 3, Result: Verdicts.Correct}},
-		{{From: 0, To: 5, Result: Verdicts.Correct}, {From: 5, To: 6, Result: Verdicts.Incorrect}},
-		{{From: 0, To: 3, Result: Verdicts.Incorrect}, {From: 3, To: 6, Result: Verdicts.Correct}},
-		{{From: 0, To: 6, Result: Verdicts.Incorrect}},
-		{{From: 0, To: 1, Result: Verdicts.Correct}},
-		{{From: 0, To: 1, Result: Verdicts.Approx}},
-		{{From: 0, To: 1, Result: Verdicts.Approx}},
-		{{From: 0, To: 1, Result: Verdicts.Incorrect}},
+		{{From: 0, To: 3, Value: Verdicts.Correct}},
+		{{From: 0, To: 5, Value: Verdicts.Correct}, {From: 5, To: 6, Value: Verdicts.Incorrect}},
+		{{From: 0, To: 3, Value: Verdicts.Incorrect}, {From: 3, To: 6, Value: Verdicts.Correct}},
+		{{From: 0, To: 6, Value: Verdicts.Incorrect}},
+		{{From: 0, To: 1, Value: Verdicts.Correct}},
+		{{From: 0, To: 1, Value: Verdicts.Approx}},
+		{{From: 0, To: 1, Value: Verdicts.Approx}},
+		{{From: 0, To: 1, Value: Verdicts.Incorrect}},
 	}
 
 	for i, testCase := range data {
@@ -107,7 +107,7 @@ func TestCompareNumsHuge(t *testing.T) {
 		}
 
 		expected := res[testCase]
-		actual := ranges[0].Result
+		actual := ranges[0].Value
 
 		if expected != actual {
 			fmt.Println(numArray1.rawData)

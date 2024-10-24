@@ -4,15 +4,38 @@ import (
 	"github.com/ChrisVilches/cpdiff/big"
 )
 
-func findGlobalResult(cmpRanges []verdictRange) Verdict {
+type ComparisonEntry struct {
+	LHS           Comparable
+	RHS           Comparable
+	Verdict       Verdict
+	VerdictRanges []verdictRange
+	MaxErr        big.Decimal
+}
+
+func newComparisonEntry(
+	lhs,
+	rhs Comparable,
+	r []verdictRange,
+	maxErr big.Decimal,
+) ComparisonEntry {
+	return ComparisonEntry{
+		LHS:           lhs,
+		RHS:           rhs,
+		MaxErr:        maxErr,
+		VerdictRanges: r,
+		Verdict:       findGlobalVerdict(r),
+	}
+}
+
+func findGlobalVerdict(cmpRanges []verdictRange) Verdict {
 	approx := false
 
 	for _, r := range cmpRanges {
-		if r.Result == Verdicts.Incorrect {
+		if r.Value == Verdicts.Incorrect {
 			return Verdicts.Incorrect
 		}
 
-		if r.Result == Verdicts.Approx {
+		if r.Value == Verdicts.Approx {
 			approx = true
 		}
 	}
@@ -25,8 +48,8 @@ func findGlobalResult(cmpRanges []verdictRange) Verdict {
 }
 
 func bothNumbers(lhs, rhs Comparable) bool {
-	return lhs.Type() == ComparableTypes.NumArray &&
-		rhs.Type() == ComparableTypes.NumArray
+	_, ok := lhs.(NumArray)
+	return ok && SameType(lhs, rhs)
 }
 
 func applyStringFallbackHeuristic(lhs, rhs *Comparable, line1, line2 string) {
@@ -40,8 +63,9 @@ func applyStringFallbackHeuristic(lhs, rhs *Comparable, line1, line2 string) {
 	// 0011 (treated as string)
 	// In this case, the user may be trying to compare binary strings,
 	// in which case it's best to show the differences bit by bit.
-	// If both begin with a non-zero digit, then the only solution is to
-	// disable numeric conversion (CLI flag).
+	// If both begin with a non-zero digit but the user still wants
+	// to compare each digit, then the only solution is to disable
+	// numeric conversion (CLI flag).
 	if bothNumbers(*lhs, *rhs) {
 		return
 	}
@@ -78,7 +102,9 @@ func Process(
 			rhs = newComparableNonNumeric(line2)
 		}
 
-		entriesCh <- newComparisonEntry(lhs, rhs, useRelativeErr, allowedError)
+		ranges, maxErr := lhs.compare(rhs, useRelativeErr, allowedError)
+
+		entriesCh <- newComparisonEntry(lhs, rhs, ranges, maxErr)
 	}
 
 	close(entriesCh)

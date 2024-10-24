@@ -10,10 +10,6 @@ type NumArray struct {
 	rawData string
 }
 
-func (NumArray) Type() ComparableType {
-	return ComparableTypes.NumArray
-}
-
 func (n NumArray) Display() string {
 	return n.rawData
 }
@@ -24,6 +20,18 @@ func (n NumArray) ShortDisplay(int) string {
 	}
 
 	return fmt.Sprintf("(%d numbers...)", len(n.nums))
+}
+
+func (n NumArray) compare(
+	c Comparable,
+	useRelativeErr bool,
+	allowedError big.Decimal,
+) ([]verdictRange, big.Decimal) {
+	if rhs, ok := c.(NumArray); ok {
+		return compareNums(n, rhs, allowedError, useRelativeErr)
+	}
+
+	return []verdictRange{{Value: Verdicts.Incorrect}}, big.Decimal{}
 }
 
 func compareNums(
@@ -65,14 +73,14 @@ func compareNums(
 
 		res = appendVerdictRange(
 			res,
-			verdictRange{From: i, To: i + 1, Result: v},
+			verdictRange{From: i, To: i + 1, Value: v},
 		)
 	}
 
 	if n != m {
 		res = appendVerdictRange(
 			res,
-			verdictRange{From: size, To: max(n, m), Result: Verdicts.Incorrect},
+			verdictRange{From: size, To: max(n, m), Value: Verdicts.Incorrect},
 		)
 	}
 

@@ -38,12 +38,12 @@ func TestCompareStrings(t *testing.T) {
 	}
 
 	ans := [][]verdictRange{
-		{{From: 0, To: 2, Result: Verdicts.Correct}, {From: 2, To: 4, Result: Verdicts.Incorrect}, {From: 4, To: 6, Result: Verdicts.Correct}},
-		{{From: 0, To: 9, Result: Verdicts.Correct}},
-		{{From: 0, To: 9, Result: Verdicts.Incorrect}},
-		{{From: 0, To: 3, Result: Verdicts.Incorrect}, {From: 3, To: 6, Result: Verdicts.Correct}, {From: 6, To: 9, Result: Verdicts.Incorrect}},
-		{{From: 0, To: 4, Result: Verdicts.Correct}, {From: 4, To: 8, Result: Verdicts.Incorrect}},
-		{{From: 0, To: 9, Result: Verdicts.Incorrect}},
+		{{From: 0, To: 2, Value: Verdicts.Correct}, {From: 2, To: 4, Value: Verdicts.Incorrect}, {From: 4, To: 6, Value: Verdicts.Correct}},
+		{{From: 0, To: 9, Value: Verdicts.Correct}},
+		{{From: 0, To: 9, Value: Verdicts.Incorrect}},
+		{{From: 0, To: 3, Value: Verdicts.Incorrect}, {From: 3, To: 6, Value: Verdicts.Correct}, {From: 6, To: 9, Value: Verdicts.Incorrect}},
+		{{From: 0, To: 4, Value: Verdicts.Correct}, {From: 4, To: 8, Value: Verdicts.Incorrect}},
+		{{From: 0, To: 9, Value: Verdicts.Incorrect}},
 	}
 
 	for i, testCase := range data {

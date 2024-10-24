@@ -3,61 +3,25 @@ package cmp
 import "github.com/ChrisVilches/cpdiff/big"
 
 type Comparable interface {
-	Type() ComparableType
 	Display() string
 	ShortDisplay(int) string
+	compare(Comparable, bool, big.Decimal) ([]verdictRange, big.Decimal)
 }
 
-type ComparableType int
-
-var ComparableTypes = struct {
-	RawString ComparableType
-	NumArray  ComparableType
-	Empty     ComparableType
-}{
-	RawString: 0,
-	NumArray:  1,
-	Empty:     2,
-}
-
-type ComparisonEntry struct {
-	LHS           Comparable
-	RHS           Comparable
-	Verdict       Verdict
-	VerdictRanges []verdictRange
-	MaxErr        big.Decimal
-}
-
-func newComparisonEntry(
-	lhs, rhs Comparable,
-	useRelativeErr bool,
-	allowedError big.Decimal,
-) ComparisonEntry {
-	e := ComparisonEntry{LHS: lhs, RHS: rhs, MaxErr: big.NewZero()}
-
-	if lhs.Type() != rhs.Type() {
-		e.Verdict = Verdicts.Incorrect
-		return e
-	}
-
-	switch lhs.Type() {
-	case ComparableTypes.RawString:
-		e.VerdictRanges = compareStrings(lhs.(RawString), rhs.(RawString))
-	case ComparableTypes.NumArray:
-		e.VerdictRanges, e.MaxErr = compareNums(
-			lhs.(NumArray),
-			rhs.(NumArray),
-			allowedError,
-			useRelativeErr,
-		)
-	case ComparableTypes.Empty:
-		e.Verdict = Verdicts.Correct
+func SameType(a, b Comparable) bool {
+	switch a.(type) {
+	case NumArray:
+		_, ok := b.(NumArray)
+		return ok
+	case RawString:
+		_, ok := b.(RawString)
+		return ok
+	case Empty:
+		_, ok := b.(Empty)
+		return ok
 	default:
-		panic("Wrong type")
+		panic("Not handled")
 	}
-
-	e.Verdict = findGlobalResult(e.VerdictRanges)
-	return e
 }
 
 type Verdict int
@@ -74,7 +38,7 @@ var Verdicts = struct {
 
 type verdictRange struct {
 	From, To int
-	Result   Verdict
+	Value    Verdict
 }
 
 func appendVerdictRange(
@@ -87,7 +51,7 @@ func appendVerdictRange(
 
 	last := &list[len(list)-1]
 
-	if last.To == newValue.From && last.Result == newValue.Result {
+	if last.To == newValue.From && last.Value == newValue.Value {
 		last.To = newValue.To
 
 		return list

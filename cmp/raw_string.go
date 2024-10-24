@@ -1,5 +1,7 @@
 package cmp
 
+import "github.com/ChrisVilches/cpdiff/big"
+
 type RawString struct {
 	value string
 }
@@ -21,8 +23,17 @@ func (r RawString) ShortDisplay(maxLength int) string {
 	return r.value
 }
 
-func (RawString) Type() ComparableType {
-	return ComparableTypes.RawString
+func (r RawString) compare(
+	c Comparable,
+	_ bool,
+	_ big.Decimal,
+) ([]verdictRange, big.Decimal) {
+	if rhs, ok := c.(RawString); ok {
+		ranges := compareStrings(r, rhs)
+		return ranges, big.Decimal{}
+	}
+
+	return []verdictRange{{Value: Verdicts.Incorrect}}, big.Decimal{}
 }
 
 func compareStrings(rs1, rs2 RawString) []verdictRange {
@@ -40,14 +51,14 @@ func compareStrings(rs1, rs2 RawString) []verdictRange {
 		}
 
 		res = appendVerdictRange(res,
-			verdictRange{From: i, To: i + 1, Result: v},
+			verdictRange{From: i, To: i + 1, Value: v},
 		)
 	}
 
 	if n != m {
 		res = appendVerdictRange(
 			res,
-			verdictRange{From: size, To: max(n, m), Result: Verdicts.Incorrect},
+			verdictRange{From: size, To: max(n, m), Value: Verdicts.Incorrect},
 		)
 	}
 

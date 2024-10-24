@@ -37,13 +37,14 @@ func getColorFn(
 	entry cmp.ComparisonEntry,
 	short bool,
 ) func(s string, entry cmp.ComparisonEntry) (string, error) {
-	if short || entry.LHS.Type() != entry.RHS.Type() {
+	if short || !cmp.SameType(entry.LHS, entry.RHS) {
 		return colorAll
 	}
 
-	if entry.LHS.Type() == cmp.ComparableTypes.NumArray {
+	switch entry.LHS.(type) {
+	case cmp.NumArray:
 		return colorFields
-	} else if entry.LHS.Type() == cmp.ComparableTypes.RawString {
+	case cmp.RawString:
 		return colorSubstrings
 	}
 

@@ -35,7 +35,7 @@ func colorSubstrings(s string, entry cmp.ComparisonEntry) (string, error) {
 			break
 		}
 
-		c := resultColor(elem.Result)
+		c := resultColor(elem.Value)
 		_, err := res.WriteString(c.Sprint(s[from:to]))
 
 		if err != nil {
@@ -60,7 +60,7 @@ func colorFields(s string, entry cmp.ComparisonEntry) (string, error) {
 			break
 		}
 
-		c := resultColor(elem.Result)
+		c := resultColor(elem.Value)
 		_, err := res.WriteString(c.Sprint(s[from:to]))
 
 		if err != nil {

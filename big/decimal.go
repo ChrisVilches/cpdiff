@@ -79,6 +79,14 @@ func (a Decimal) InsideRange(lo, hi float64) bool {
 }
 
 func Max(a, b Decimal) Decimal {
+	if a.inner == nil {
+		return b
+	}
+
+	if b.inner == nil {
+		return a
+	}
+
 	if a.inner.Cmp(b.inner) == 1 {
 		return a
 	}
