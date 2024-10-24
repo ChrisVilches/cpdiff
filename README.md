@@ -8,6 +8,12 @@ File difference tool for competitive programming.
 go install github.com/ChrisVilches/cpdiff@latest
 ```
 
+### Arch Linux (AUR)
+
+```sh
+yay -S cpdiff
+```
+
 ## Usage
 
 Comparing standard input (e.g. some program's output redirected to `cpdiff`) against a file (e.g. the correct answer):
@@ -45,12 +51,6 @@ If you want to compare binary strings (or digits), you can compare them characte
 Big numbers are supported. Numbers can have arbitrary precision or amount of digits:
 
 ![big-numbers](./screenshots/big-numbers.png)
-
-### Arch Linux (AUR)
-
-```sh
-yay -S cpdiff
-```
 
 ## Development
 
