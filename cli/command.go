@@ -116,22 +116,28 @@ func showComparisonEntry(
 	return true, nil
 }
 
-func readLinesToChannel(buf *bufio.Scanner, ch chan string, opts options) {
-	for buf.Scan() {
-		line := buf.Text()
+func readLinesToChannel(buf *bufio.Scanner, opts options) <-chan string {
+	ch := make(chan string, chSize)
 
-		if opts.trim {
-			line = strings.TrimSpace(line)
+	go func() {
+		for buf.Scan() {
+			line := buf.Text()
+
+			if opts.trim {
+				line = strings.TrimSpace(line)
+			}
+
+			if shouldSkipLine(line, opts) {
+				continue
+			}
+
+			ch <- line
 		}
 
-		if shouldSkipLine(line, opts) {
-			continue
-		}
+		close(ch)
+	}()
 
-		ch <- line
-	}
-
-	close(ch)
+	return ch
 }
 
 func getFile(path string) (*os.File, error) {
@@ -171,7 +177,7 @@ func getBothFiles(args []string) ([]*os.File, error) {
 }
 
 func listenEntries(
-	entries chan cmp.ComparisonEntry,
+	entries <-chan cmp.ComparisonEntry,
 	opts options,
 ) (*fullResult, error) {
 	res := newFullResult()
@@ -213,19 +219,16 @@ func mainCommand(opts options, args []string) error {
 	lhs := bufio.NewScanner(files[0])
 	rhs := bufio.NewScanner(files[1])
 
-	entries := make(chan cmp.ComparisonEntry, chSize)
-	lhsCh := make(chan string, chSize)
-	rhsCh := make(chan string, chSize)
+	lhsCh := readLinesToChannel(lhs, opts)
+	rhsCh := readLinesToChannel(rhs, opts)
 
-	go readLinesToChannel(lhs, lhsCh, opts)
-	go readLinesToChannel(rhs, rhsCh, opts)
-	go cmp.Process(
+	entries := cmp.Process(
 		lhsCh,
 		rhsCh,
 		opts.error,
 		opts.useRelativeError,
 		opts.numbers,
-		entries,
+		chSize,
 	)
 
 	fullResult, err := listenEntries(entries, opts)

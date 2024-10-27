@@ -78,3 +78,9 @@ docker run --rm $IMG
 ```
 
 Clean up manually afterwards (i.e. remove images).
+
+Generate screenshots by first installing [termshot](https://github.com/homeport/termshot) and then executing the following command:
+
+```sh
+bash ./screenshots/gen.sh path_to_termshot_executable path_to_cpdiff_executable
+```

@@ -5,29 +5,29 @@ import (
 	"strings"
 )
 
-func toNumArray(s string) ([]big.Decimal, bool) {
+func toNumArray(s string) []big.Decimal {
 	parts := strings.Fields(s)
 	res := []big.Decimal{}
 
 	if len(parts) == 0 {
-		return nil, false
+		return nil
 	}
 
 	for _, part := range parts {
 		if len(part) > 1 && part[0] == '0' && part[1] != '.' {
-			return nil, false
+			return nil
 		}
 
 		val, ok := big.NewFromString(part)
 
 		if !ok {
-			return nil, false
+			return nil
 		}
 
 		res = append(res, val)
 	}
 
-	return res, true
+	return res
 }
 
 func newComparable(line string) Comparable {
@@ -35,9 +35,9 @@ func newComparable(line string) Comparable {
 		return Empty{}
 	}
 
-	nums, ok := toNumArray(line)
+	nums := toNumArray(line)
 
-	if ok {
+	if nums != nil {
 		return NumArray{nums: nums, rawData: line}
 	}
 

@@ -76,36 +76,42 @@ func applyStringFallbackHeuristic(lhs, rhs *Comparable, line1, line2 string) {
 
 func Process(
 	lhsCh,
-	rhsCh chan string,
+	rhsCh <-chan string,
 	allowedError big.Decimal,
 	useRelativeErr bool,
 	useNumbers bool,
-	entriesCh chan ComparisonEntry,
-) {
-	for {
-		line1, ok1 := <-lhsCh
-		line2, ok2 := <-rhsCh
+	chSize int,
+) <-chan ComparisonEntry {
+	entries := make(chan ComparisonEntry, chSize)
 
-		if !ok1 && !ok2 {
-			break
+	go func() {
+		for {
+			line1, ok1 := <-lhsCh
+			line2, ok2 := <-rhsCh
+
+			if !ok1 && !ok2 {
+				break
+			}
+
+			var lhs, rhs Comparable
+
+			if useNumbers {
+				lhs = newComparable(line1)
+				rhs = newComparable(line2)
+
+				applyStringFallbackHeuristic(&lhs, &rhs, line1, line2)
+			} else {
+				lhs = newComparableNonNumeric(line1)
+				rhs = newComparableNonNumeric(line2)
+			}
+
+			ranges, maxErr := lhs.compare(rhs, useRelativeErr, allowedError)
+
+			entries <- newComparisonEntry(lhs, rhs, ranges, maxErr)
 		}
 
-		var lhs, rhs Comparable
+		close(entries)
+	}()
 
-		if useNumbers {
-			lhs = newComparable(line1)
-			rhs = newComparable(line2)
-
-			applyStringFallbackHeuristic(&lhs, &rhs, line1, line2)
-		} else {
-			lhs = newComparableNonNumeric(line1)
-			rhs = newComparableNonNumeric(line2)
-		}
-
-		ranges, maxErr := lhs.compare(rhs, useRelativeErr, allowedError)
-
-		entriesCh <- newComparisonEntry(lhs, rhs, ranges, maxErr)
-	}
-
-	close(entriesCh)
+	return entries
 }

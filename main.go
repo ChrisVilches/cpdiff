@@ -37,5 +37,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-
-// TODO: This project needs a massive code review.
