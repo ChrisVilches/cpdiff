@@ -13,9 +13,13 @@ func (Empty) ShortDisplay(int) string {
 }
 
 func (Empty) compare(
-	Comparable,
-	bool,
-	big.Decimal,
+	c Comparable,
+	_ bool,
+	_ big.Decimal,
 ) ([]verdictRange, big.Decimal) {
-	return []verdictRange{{Value: Verdicts.Correct}}, big.Decimal{}
+	if _, ok := c.(Empty); ok {
+		return []verdictRange{{Value: Verdicts.Correct}}, big.Decimal{}
+	}
+
+	return []verdictRange{{Value: Verdicts.Incorrect}}, big.Decimal{}
 }

@@ -19,6 +19,13 @@ func TestWrongAnswer(t *testing.T) {
 	expectEq(t, lines[len(lines)-1], res)
 }
 
+func TestEmptyWrongAnswer(t *testing.T) {
+	lines := getLines(7)
+	res := "\033[31;1mWrong Answer\033[0;22m\033[31;1;22m 1/3\033[0;22;0m"
+
+	expectEq(t, lines[len(lines)-1], res)
+}
+
 func TestApprox(t *testing.T) {
 	lines := getLines(3)
 	res := "\033[32;1mAccepted\033[0;22m\033[32;1;22m 1/1\033[0;22;0m"
