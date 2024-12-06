@@ -89,7 +89,9 @@ func passStdin(stdin string, cmd *exec.Cmd) {
 		panic(err)
 	}
 
-	fmt.Fprintln(stdinPipe, stdin)
+	// Don't add newline, to verify the behavior when
+	// the last line ends with EOF instead of newline.
+	fmt.Fprint(stdinPipe, stdin)
 	_ = stdinPipe.Close()
 }
 

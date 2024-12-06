@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/ChrisVilches/cpdiff/cmp"
+	"github.com/ChrisVilches/cpdiff/util"
 )
 
 const (
@@ -119,6 +122,23 @@ func showComparisonEntry(
 	return true, nil
 }
 
+func handleReadLineToChannel(line string, ch chan<- string, opts options) {
+	// A line can never have a trailing newline,
+	// even if trimming option is off. (If a newline remains, then the column
+	// formatting will get messed up).
+	line = util.RemoveTrailingNewLine(line)
+
+	if opts.trim {
+		line = strings.TrimSpace(line)
+	}
+
+	if shouldSkipLine(line, opts) {
+		return
+	}
+
+	ch <- line
+}
+
 func readLinesToChannel(buf *bufio.Reader, opts options) <-chan string {
 	ch := make(chan string, chSize)
 
@@ -140,19 +160,18 @@ func readLinesToChannel(buf *bufio.Reader, opts options) <-chan string {
 	go func() {
 		for {
 			line, err := buf.ReadString('\n')
+
+			// If the last line ended with EOF instead of newline,
+			// it has to be handled manually.
 			if err != nil {
+				if err == io.EOF {
+					handleReadLineToChannel(line, ch, opts)
+				}
+
 				break
 			}
 
-			if opts.trim {
-				line = strings.TrimSpace(line)
-			}
-
-			if shouldSkipLine(line, opts) {
-				continue
-			}
-
-			ch <- line
+			handleReadLineToChannel(line, ch, opts)
 		}
 
 		close(ch)
@@ -225,6 +244,14 @@ func listenEntries(
 	return &res, nil
 }
 
+func handleSecondInterrupt() {
+	signal.Reset(os.Interrupt)
+	err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func listenSignal() *atomic.Bool {
 	res := atomic.Bool{}
 	c := make(chan os.Signal, 1)
@@ -232,6 +259,9 @@ func listenSignal() *atomic.Bool {
 	go func() {
 		for s := range c {
 			if s.String() == "interrupt" {
+				if res.Load() {
+					handleSecondInterrupt()
+				}
 				res.Store(true)
 			}
 		}
