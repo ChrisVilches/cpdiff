@@ -1,6 +1,8 @@
 package cmp
 
 import (
+	"sync/atomic"
+
 	"github.com/ChrisVilches/cpdiff/big"
 )
 
@@ -81,6 +83,7 @@ func Process(
 	useRelativeErr bool,
 	useNumbers bool,
 	chSize int,
+	aborted *atomic.Bool,
 ) <-chan ComparisonEntry {
 	entries := make(chan ComparisonEntry, chSize)
 
@@ -89,7 +92,7 @@ func Process(
 			line1, ok1 := <-lhsCh
 			line2, ok2 := <-rhsCh
 
-			if !ok1 && !ok2 {
+			if (!ok1 && !ok2) || aborted.Load() {
 				break
 			}
 

@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/ChrisVilches/cpdiff/cmp"
 	"os"
+	"os/signal"
 	"strings"
+	"sync/atomic"
 	"time"
+
+	"github.com/ChrisVilches/cpdiff/cmp"
 )
 
 const (
@@ -116,12 +119,30 @@ func showComparisonEntry(
 	return true, nil
 }
 
-func readLinesToChannel(buf *bufio.Scanner, opts options) <-chan string {
+func readLinesToChannel(buf *bufio.Reader, opts options) <-chan string {
 	ch := make(chan string, chSize)
 
+	// TODO: I have to improve the error validation here.
+	// In the previous version I had something like this:
+	// (since I changed to bufio.NewReader, this error handling
+	// had to be removed)
+	//
+	// lhs := bufio.NewScanner(files[0])
+	// rhs := bufio.NewScanner(files[1])
+	// ...
+	// if err := lhs.Err(); err != nil {
+	// 	return err
+	// }
+	// if err := rhs.Err(); err != nil {
+	// 	return err
+	// }
+
 	go func() {
-		for buf.Scan() {
-			line := buf.Text()
+		for {
+			line, err := buf.ReadString('\n')
+			if err != nil {
+				break
+			}
 
 			if opts.trim {
 				line = strings.TrimSpace(line)
@@ -204,6 +225,20 @@ func listenEntries(
 	return &res, nil
 }
 
+func listenSignal() *atomic.Bool {
+	res := atomic.Bool{}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for s := range c {
+			if s.String() == "interrupt" {
+				res.Store(true)
+			}
+		}
+	}()
+	return &res
+}
+
 func mainCommand(opts options, args []string) error {
 	startTime := time.Now()
 
@@ -216,8 +251,10 @@ func mainCommand(opts options, args []string) error {
 	defer files[0].Close()
 	defer files[1].Close()
 
-	lhs := bufio.NewScanner(files[0])
-	rhs := bufio.NewScanner(files[1])
+	lhs := bufio.NewReader(files[0])
+	rhs := bufio.NewReader(files[1])
+
+	signalAborted := listenSignal()
 
 	lhsCh := readLinesToChannel(lhs, opts)
 	rhsCh := readLinesToChannel(rhs, opts)
@@ -229,19 +266,12 @@ func mainCommand(opts options, args []string) error {
 		opts.useRelativeError,
 		opts.numbers,
 		chSize,
+		signalAborted,
 	)
 
 	fullResult, err := listenEntries(entries, opts)
 
 	if err != nil {
-		return err
-	}
-
-	if err := lhs.Err(); err != nil {
-		return err
-	}
-
-	if err := rhs.Err(); err != nil {
 		return err
 	}
 
