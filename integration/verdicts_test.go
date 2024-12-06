@@ -15,12 +15,19 @@ func TestAccepted(t *testing.T) {
 func TestAcceptedNewlineOrEOF(t *testing.T) {
 	lines1, statusCode1 := runCmd("-", "./data/8/ans", "1 2 3")
 	lines2, statusCode2 := runCmd("-", "./data/8/ans", "1 2 3\n")
+	lines3, statusCode3 := runCmd("-", "./data/8/ans", "1 2 3", "-t=0", "-i=0")
 	expectEq(t, statusCode1, 0)
-	expectLinesContain(t, lines1, "Accepted")
 	expectEq(t, statusCode2, 0)
+	expectEq(t, statusCode3, 0)
+	expectLinesContain(t, lines1, "Accepted")
 	expectLinesContain(t, lines2, "Accepted")
+	expectLinesContain(t, lines3, "Accepted")
+	expectLinesNotContain(t, lines1, "-")
+	expectLinesNotContain(t, lines2, "-")
+	expectLinesContain(t, lines3, "-")
 	expectEq(t, len(lines1), 3)
 	expectEq(t, len(lines2), 3)
+	expectEq(t, len(lines3), 4)
 }
 
 func TestWrongAnswerNewlinesRemoved(t *testing.T) {

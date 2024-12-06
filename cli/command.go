@@ -162,9 +162,13 @@ func readLinesToChannel(buf *bufio.Reader, opts options) <-chan string {
 			line, err := buf.ReadString('\n')
 
 			// If the last line ended with EOF instead of newline,
-			// it has to be handled manually.
+			// it has to be handled manually. Only for the last line,
+			// it should be checked if it contains characters or not,
+			// and don't send it if it's empty (because perhaps the file
+			// was properly ending with newlines, which would mean handling
+			// EOF like this would create a new line that wasn't necessary).
 			if err != nil {
-				if err == io.EOF {
+				if err == io.EOF && len(line) > 0 {
 					handleReadLineToChannel(line, ch, opts)
 				}
 
